@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Мичурино — гостевой дом</title>
+  <meta name="description" content="Гостевой дом Мичурино: тихий дом у леса. Бронирование онлайн.">
+  <link rel="icon" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header" id="top">
+    <a class="brand" href="#top">
+      <img src="assets/logo.svg" alt="" width="54" height="29">
+      <span><b data-c="name"></b><small data-c="tagline"></small></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="#about">О доме</a>
+      <a href="#gallery">Фото</a>
+      <a href="#prices">Цены</a>
+      <a href="#news">Новости</a>
+      <a href="#map">Как добраться</a>
+    </nav>
+    <a class="btn btn-small" href="#booking">Забронировать</a>
+    <button class="burger" id="burger" aria-label="Меню" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-text reveal">
+        <p class="eyebrow">Гостевой дом · Мичурино</p>
+        <h1 data-c="hero.title"></h1>
+        <p class="lead" data-c="hero.text"></p>
+        <div class="hero-actions">
+          <a class="btn" href="#booking" data-c="hero.button"></a>
+          <a class="btn btn-ghost" id="wa-hero" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.6-.1 1.1Z"/></svg>
+            WhatsApp
+          </a>
+        </div>
+      </div>
+      <div class="hero-pic reveal" aria-hidden="true">
+        <svg viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9F1E6"/><stop offset="1" stop-color="#F7F5EE"/></linearGradient>
+          </defs>
+          <rect width="600" height="460" fill="url(#sky)"/>
+          <circle cx="470" cy="110" r="46" fill="#F2E7CF"/>
+          <g fill="#C9DCC2"><polygon points="40,330 90,150 140,330"/><polygon points="110,330 170,120 230,330"/><polygon points="420,330 480,140 540,330"/><polygon points="500,330 560,170 620,330"/></g>
+          <g fill="#4F7A45"><polygon points="0,360 50,190 100,360"/><polygon points="470,360 525,180 580,360"/></g>
+          <g class="house">
+            <polygon points="200,250 330,150 460,250" fill="#C2A27A"/>
+            <polygon points="225,250 330,170 435,250" fill="#5A4030"/>
+            <rect x="235" y="250" width="190" height="110" fill="#FBF8F1"/>
+            <rect x="268" y="275" width="40" height="38" fill="#2F4A2B"/><path d="M288 275v38M268 294h40" stroke="#FBF8F1" stroke-width="3"/>
+            <rect x="352" y="282" width="40" height="78" fill="#5A4030"/>
+            <rect x="315" y="198" width="30" height="28" fill="#2F4A2B"/><path d="M330 198v28M315 212h30" stroke="#C2A27A" stroke-width="3"/>
+          </g>
+          <rect y="355" width="600" height="105" fill="#E3ECD9"/>
+          <path d="M0 370 Q150 352 300 368 T600 362 V460 H0Z" fill="#D4E3C7"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="container two">
+        <div class="reveal">
+          <p class="eyebrow">О нас</p>
+          <h2 data-c="about.title"></h2>
+          <p class="lead" data-c="about.text"></p>
+        </div>
+        <div class="features" id="features"></div>
+      </div>
+    </section>
+
+    <section class="section alt" id="gallery">
+      <div class="container">
+        <div class="section-head reveal">
+          <div><p class="eyebrow">Фото</p><h2>Как у нас</h2></div>
+          <a class="link" id="ig-link" target="_blank" rel="noopener">Больше в Instagram →</a>
+        </div>
+        <div class="gallery">
+          <figure class="ph reveal">Фото дома снаружи</figure>
+          <figure class="ph reveal">Гостиная</figure>
+          <figure class="ph reveal">Спальня</figure>
+          <figure class="ph reveal">Беседка и мангал</figure>
+          <figure class="ph reveal">Территория</figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="prices">
+      <div class="container">
+        <div class="section-head reveal"><div><p class="eyebrow">Цены</p><h2>Сколько стоит</h2></div></div>
+        <div class="prices" id="price-list"></div>
+      </div>
+    </section>
+
+    <section class="section alt" id="news">
+      <div class="container">
+        <div class="section-head reveal"><div><p class="eyebrow">Новости</p><h2>Что нового</h2></div></div>
+        <div class="posts" id="posts"></div>
+      </div>
+    </section>
+
+    <section class="section booking-wrap" id="booking">
+      <div class="container two">
+        <div class="reveal">
+          <p class="eyebrow light">Заявка</p>
+          <h2 data-c="booking.title"></h2>
+          <p class="lead" data-c="booking.text"></p>
+          <p class="contact-line">Или звоните: <a id="phone-link"></a></p>
+        </div>
+        <form class="form reveal" id="booking-form" novalidate>
+          <label>Ваше имя<input name="name" required autocomplete="name" placeholder="Айгерим"></label>
+          <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 (___) ___-__-__"></label>
+          <div class="row">
+            <label>Заезд<input name="date_in" type="date" required></label>
+            <label>Выезд<input name="date_out" type="date" required></label>
+          </div>
+          <label>Сколько гостей<input name="guests" type="number" min="1" max="30" value="2"></label>
+          <label>Комментарий<textarea name="comment" rows="3" placeholder="Пожелания, вопросы"></textarea></label>
+          <p class="form-error" id="form-error" role="alert"></p>
+          <button class="btn btn-full" type="submit">Отправить заявку</button>
+          <p class="form-ok" id="form-ok" role="status" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" id="map">
+      <div class="container">
+        <div class="section-head reveal"><div><p class="eyebrow">Как добраться</p><h2>Мы на карте</h2></div><p class="muted" data-c="address"></p></div>
+        <div class="map ph reveal">Здесь будет карта 2ГИС — жду адрес</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container foot">
+      <div class="brand"><img src="assets/logo.svg" alt="" width="54" height="29"><span><b data-c="name"></b><small data-c="tagline"></small></span></div>
+      <div class="foot-links">
+        <a id="phone-foot"></a>
+        <a id="wa-foot" target="_blank" rel="noopener">WhatsApp</a>
+        <a id="ig-foot" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

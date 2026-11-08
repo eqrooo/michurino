@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Админка — Мичурино</title>
+  <link rel="icon" href="assets/logo.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+  <!-- Вход -->
+  <section id="login" class="login" hidden>
+    <form class="form card" id="login-form">
+      <div class="brand"><img src="assets/logo.svg" alt="" width="54" height="29"><span><b>Мичурино</b><small>админка</small></span></div>
+      <label>Почта<input name="email" type="email" required autocomplete="email"></label>
+      <label>Пароль<input name="password" type="password" required minlength="8" autocomplete="current-password"></label>
+      <p class="form-error" id="login-error" role="alert"></p>
+      <button class="btn btn-full" type="submit">Войти</button>
+      <button class="link-btn" type="button" id="signup-btn">Первый раз? Создать вход</button>
+    </form>
+  </section>
+
+  <section id="noaccess" class="login" hidden>
+    <div class="card">
+      <h2>Почти готово</h2>
+      <p>Вход создан, но доступ к админке ещё не выдан. Напиши программисту — он включит.</p>
+      <button class="btn btn-ghost" data-logout>Выйти</button>
+    </div>
+  </section>
+
+  <!-- Панель -->
+  <div id="panel" hidden>
+    <header class="admin-head">
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="" width="54" height="29"><span><b>Мичурино</b><small>админка</small></span></a>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="bookings" aria-selected="true">Заявки <span id="new-count" class="badge" hidden></span></button>
+        <button role="tab" data-tab="posts">Посты</button>
+        <button role="tab" data-tab="stats">Посещения</button>
+      </nav>
+      <button class="link-btn" data-logout>Выйти</button>
+    </header>
+
+    <main class="admin-main">
+      <section data-panel="bookings">
+        <div class="filters">
+          <button class="chip active" data-filter="active">Активные</button>
+          <button class="chip" data-filter="all">Все</button>
+        </div>
+        <div id="bookings-list" class="list"></div>
+      </section>
+
+      <section data-panel="posts" hidden>
+        <form class="form card" id="post-form">
+          <h2>Новый пост</h2>
+          <label>Заголовок<input name="title" required maxlength="200" placeholder="Свободные выходные 15–16 ноября"></label>
+          <label>Текст<textarea name="body" rows="5" maxlength="5000" placeholder="О чём рассказать гостям"></textarea></label>
+          <label class="file">Фото (необязательно)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <img id="preview" class="preview" alt="" hidden>
+          <p class="form-error" id="post-error" role="alert"></p>
+          <button class="btn btn-full" type="submit">Опубликовать</button>
+        </form>
+        <h3 class="sub">Опубликованные</h3>
+        <div id="posts-list" class="list"></div>
+      </section>
+
+      <section data-panel="stats" hidden>
+        <div class="stats" id="stats-cards"></div>
+        <div class="card">
+          <h3>За последние 14 дней</h3>
+          <div class="bars" id="bars"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

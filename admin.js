@@ -1,0 +1,148 @@
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const d = (s) => new Date(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const dt = (s) => new Date(s).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const show = (id) => ['login', 'noaccess', 'panel'].forEach((x) => { $(x).hidden = x !== id; });
+  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => (t.hidden = true), 2500); };
+  const STATUS = { new: 'Новая', confirmed: 'Подтверждена', done: 'Завершена', cancelled: 'Отменена' };
+
+  // ---------- вход ----------
+  async function boot() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return show('login');
+    const { data: isAdmin } = await sb.rpc('is_admin');
+    if (!isAdmin) return show('noaccess');
+    show('panel');
+    loadBookings(); loadPosts();
+  }
+  $('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target; $('login-error').textContent = '';
+    const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+    if (error) { $('login-error').textContent = 'Неверная почта или пароль (или почта ещё не подтверждена)'; return; }
+    boot();
+  });
+  $('signup-btn').addEventListener('click', async () => {
+    const f = $('login-form'); $('login-error').textContent = '';
+    if (!f.reportValidity()) return;
+    const { error } = await sb.auth.signUp({ email: f.email.value.trim(), password: f.password.value });
+    $('login-error').textContent = error ? 'Ошибка: ' + error.message : 'Готово! Подтверди почту по ссылке из письма, потом войди.';
+  });
+  document.querySelectorAll('[data-logout]').forEach((b) => b.addEventListener('click', async () => { await sb.auth.signOut(); show('login'); }));
+
+  // ---------- вкладки ----------
+  document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x === b));
+    document.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== b.dataset.tab; });
+    if (b.dataset.tab === 'stats') loadStats();
+  }));
+
+  // ---------- заявки ----------
+  let filter = 'active';
+  document.querySelectorAll('[data-filter]').forEach((c) => c.addEventListener('click', () => {
+    filter = c.dataset.filter;
+    document.querySelectorAll('[data-filter]').forEach((x) => x.classList.toggle('active', x === c));
+    loadBookings();
+  }));
+  async function loadBookings() {
+    let q = sb.from('bookings').select('*').order('created_at', { ascending: false }).limit(200);
+    if (filter === 'active') q = q.in('status', ['new', 'confirmed']);
+    const { data, error } = await q;
+    const box = $('bookings-list');
+    if (error) { box.innerHTML = '<p class="empty">Ошибка загрузки</p>'; return; }
+    const n = (data || []).filter((b) => b.status === 'new').length;
+    $('new-count').textContent = n; $('new-count').hidden = !n;
+    if (!data.length) { box.innerHTML = '<p class="empty">Заявок пока нет</p>'; return; }
+    box.innerHTML = data.map((b) => {
+      const phone = b.phone.replace(/[^\d+]/g, '');
+      const wa = phone.replace(/\D/g, '').replace(/^8/, '7');
+      return `<article class="card bk">
+        <div><h3>${esc(b.name)}</h3>
+          <div class="meta"><span class="dates">${d(b.date_in)} — ${d(b.date_out)}</span> · гостей: ${b.guests} · пришла ${dt(b.created_at)}</div></div>
+        <span class="status st-${b.status}">${STATUS[b.status]}</span>
+        ${b.comment ? `<p class="comment">${esc(b.comment)}</p>` : ''}
+        <div class="actions">
+          <a class="btn btn-small" href="tel:${esc(phone)}">Позвонить ${esc(b.phone)}</a>
+          <a class="btn btn-small btn-ghost" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>
+          <select data-id="${b.id}" aria-label="Статус заявки">
+            ${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === b.status ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div></article>`;
+    }).join('');
+    box.querySelectorAll('select').forEach((s) => s.addEventListener('change', async () => {
+      const { error } = await sb.from('bookings').update({ status: s.value }).eq('id', s.dataset.id);
+      toast(error ? 'Не сохранилось' : 'Статус обновлён'); loadBookings();
+    }));
+  }
+
+  // ---------- посты ----------
+  const pf = $('post-form');
+  pf.image.addEventListener('change', () => {
+    const f = pf.image.files[0]; const p = $('preview');
+    if (f) { p.src = URL.createObjectURL(f); p.hidden = false; } else p.hidden = true;
+  });
+  async function shrink(file) {
+    const img = await createImageBitmap(file);
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return new Promise((r) => c.toBlob(r, 'image/jpeg', 0.85));
+  }
+  pf.addEventListener('submit', async (e) => {
+    e.preventDefault(); $('post-error').textContent = '';
+    const btn = pf.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Публикуем…';
+    try {
+      let image_url = null;
+      const file = pf.image.files[0];
+      if (file) {
+        const blob = await shrink(file);
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const up = await sb.storage.from('post-images').upload(path, blob, { contentType: 'image/jpeg' });
+        if (up.error) throw up.error;
+        image_url = sb.storage.from('post-images').getPublicUrl(path).data.publicUrl;
+      }
+      const { error } = await sb.from('posts').insert({ title: pf.title.value.trim(), body: pf.body.value.trim() || null, image_url });
+      if (error) throw error;
+      pf.reset(); $('preview').hidden = true; toast('Пост опубликован'); loadPosts();
+    } catch (err) {
+      $('post-error').textContent = 'Не получилось: ' + (err.message || err);
+    } finally { btn.disabled = false; btn.textContent = 'Опубликовать'; }
+  });
+  async function loadPosts() {
+    const { data } = await sb.from('posts').select('*').order('created_at', { ascending: false });
+    const box = $('posts-list');
+    if (!data || !data.length) { box.innerHTML = '<p class="empty">Постов пока нет</p>'; return; }
+    box.innerHTML = data.map((p) => `<article class="card pc">
+      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="">` : '<div class="noimg"></div>'}
+      <div><h4>${esc(p.title)}</h4><time>${dt(p.created_at)}</time></div>
+      <button class="btn-danger" data-del="${p.id}" data-img="${esc(p.image_url || '')}">Удалить</button></article>`).join('');
+    box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Удалить пост навсегда?')) return;
+      const { error } = await sb.from('posts').delete().eq('id', b.dataset.del);
+      if (!error && b.dataset.img) { const name = b.dataset.img.split('/post-images/')[1]; if (name) await sb.storage.from('post-images').remove([name]); }
+      toast(error ? 'Не удалилось' : 'Пост удалён'); loadPosts();
+    }));
+  }
+
+  // ---------- посещения ----------
+  async function loadStats() {
+    const since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - 29);
+    const { data } = await sb.from('visits').select('created_at, device').gte('created_at', since.toISOString()).limit(10000);
+    const v = data || [];
+    const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+    const week = new Date(startToday); week.setDate(week.getDate() - 6);
+    const cnt = (from) => v.filter((x) => new Date(x.created_at) >= from).length;
+    const mob = v.length ? Math.round(v.filter((x) => x.device === 'mobile').length / v.length * 100) : 0;
+    $('stats-cards').innerHTML = `
+      <div class="card stat"><strong>${cnt(startToday)}</strong><span>сегодня</span></div>
+      <div class="card stat"><strong>${cnt(week)}</strong><span>за 7 дней</span></div>
+      <div class="card stat"><strong>${v.length}</strong><span>за 30 дней · ${mob}% с телефона</span></div>`;
+    const days = [...Array(14)].map((_, i) => { const x = new Date(startToday); x.setDate(x.getDate() - 13 + i); return x; });
+    const counts = days.map((day) => { const next = new Date(day); next.setDate(next.getDate() + 1); return v.filter((x) => { const t = new Date(x.created_at); return t >= day && t < next; }).length; });
+    const max = Math.max(1, ...counts);
+    $('bars').innerHTML = days.map((day, i) => `<div class="bar" title="${counts[i]} посещений"><b>${counts[i] || ''}</b><i style="height:${counts[i] / max * 85}%"></i>${day.getDate()}</div>`).join('');
+  }
+
+  boot();
+})();
