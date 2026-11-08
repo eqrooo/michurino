@@ -108,7 +108,10 @@ h2 { font-size: clamp(34px, 4vw, 50px); }
 .form-ok { margin: 0; padding: 12px 14px; background: var(--green-100); color: var(--green-900); border-radius: 10px; font-weight: 600; }
 
 /* map */
-.map { height: 400px; }
+.map { height: 420px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--green-100); }
+.map iframe { width: 100%; height: 100%; border: 0; display: block; }
+.map-actions { margin-top: 16px; }
+@media (max-width: 600px) { .map { height: 340px; } .map-actions .btn { width: 100%; justify-content: center; text-align: center; } }
 
 /* footer */
 .footer { border-top: 1px solid var(--line); padding: 32px 0; }

@@ -18,6 +18,14 @@
   setLink('ig-link', ig);
   setLink('ig-foot', ig);
 
+  // Карта 2ГИС
+  const m = C.map2gis;
+  if (m) {
+    const opt = encodeURIComponent(JSON.stringify({ pos: { lat: m.lat, lon: m.lon, zoom: 16 }, opt: { city: m.city }, org: m.id }));
+    document.getElementById('map-frame').src = 'https://widgets.2gis.com/widget?type=firmsonmap&options=' + opt;
+    setLink('map-link', `https://2gis.kz/${m.city}/geo/${m.id}`);
+  }
+
   const icons = {
     home: '<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     tree: '<path d="M12 2 5 13h4l-3 5h12l-3-5h4zM12 18v4"/>',
