@@ -18,6 +18,40 @@
   setLink('ig-link', ig);
   setLink('ig-foot', ig);
 
+  // Главное фото
+  const hi = document.getElementById('hero-img'); hi.src = C.heroPhoto;
+
+  // Галерея с вкладками + просмотр
+  const tabs = document.getElementById('g-tabs'), grid = document.getElementById('g-grid');
+  const lb = document.getElementById('lb'), lbImg = document.getElementById('lb-img');
+  let cur = [], idx = 0;
+  const pad = (n) => String(n).padStart(2, '0');
+  const showTab = (k) => {
+    const g = C.gallery[k];
+    tabs.querySelectorAll('button').forEach((b, i) => { b.setAttribute('aria-selected', i === k); b.tabIndex = i === k ? 0 : -1; });
+    cur = Array.from({ length: g.count }, (_, i) => `photos/${g.folder}/${pad(i + 1)}`);
+    grid.className = 'gallery n' + Math.min(g.count, 5);
+    grid.innerHTML = cur.map((src, i) => `<button class="g-item" data-i="${i}" aria-label="Открыть фото ${i + 1} из ${cur.length}"><img src="${src}-s.jpg" alt="${g.title}, фото ${i + 1}" loading="lazy"></button>`).join('');
+    grid.querySelectorAll('img').forEach((im) => { im.onload = () => im.classList.add('ok'); if (im.complete) im.classList.add('ok'); });
+  };
+  tabs.innerHTML = C.gallery.map((g, i) => `<button role="tab" data-k="${i}">${g.title} <span>${g.count}</span></button>`).join('');
+  tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showTab(+b.dataset.k); });
+  tabs.addEventListener('keydown', (e) => {
+    const n = C.gallery.length, k = [...tabs.children].indexOf(document.activeElement);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const j = (k + (e.key === 'ArrowRight' ? 1 : n - 1)) % n; showTab(j); tabs.children[j].focus(); }
+  });
+  showTab(0);
+  const open = (i) => { idx = (i + cur.length) % cur.length; lbImg.src = cur[idx] + '.jpg'; document.getElementById('lb-count').textContent = `${idx + 1} / ${cur.length}`; };
+  grid.addEventListener('click', (e) => { const b = e.target.closest('.g-item'); if (!b) return; open(+b.dataset.i); lb.showModal(); });
+  document.getElementById('lb-prev').onclick = () => open(idx - 1);
+  document.getElementById('lb-next').onclick = () => open(idx + 1);
+  document.getElementById('lb-close').onclick = () => lb.close();
+  lb.addEventListener('click', (e) => { if (e.target === lb) lb.close(); });
+  lb.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') open(idx + 1); if (e.key === 'ArrowLeft') open(idx - 1); });
+  let sx = null;
+  lb.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', (e) => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) open(idx + (dx < 0 ? 1 : -1)); sx = null; });
+
   // Карта 2ГИС
   const m = C.map2gis;
   if (m) {

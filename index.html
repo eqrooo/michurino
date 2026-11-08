@@ -37,27 +37,7 @@
           <a class="btn" href="#booking" data-c="hero.button"></a>
         </div>
       </div>
-      <div class="hero-pic reveal" aria-hidden="true">
-        <svg viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9F1E6"/><stop offset="1" stop-color="#F7F5EE"/></linearGradient>
-          </defs>
-          <rect width="600" height="460" fill="url(#sky)"/>
-          <circle cx="470" cy="110" r="46" fill="#F2E7CF"/>
-          <g fill="#C9DCC2"><polygon points="40,330 90,150 140,330"/><polygon points="110,330 170,120 230,330"/><polygon points="420,330 480,140 540,330"/><polygon points="500,330 560,170 620,330"/></g>
-          <g fill="#4F7A45"><polygon points="0,360 50,190 100,360"/><polygon points="470,360 525,180 580,360"/></g>
-          <g class="house">
-            <polygon points="200,250 330,150 460,250" fill="#C2A27A"/>
-            <polygon points="225,250 330,170 435,250" fill="#5A4030"/>
-            <rect x="235" y="250" width="190" height="110" fill="#FBF8F1"/>
-            <rect x="268" y="275" width="40" height="38" fill="#2F4A2B"/><path d="M288 275v38M268 294h40" stroke="#FBF8F1" stroke-width="3"/>
-            <rect x="352" y="282" width="40" height="78" fill="#5A4030"/>
-            <rect x="315" y="198" width="30" height="28" fill="#2F4A2B"/><path d="M330 198v28M315 212h30" stroke="#C2A27A" stroke-width="3"/>
-          </g>
-          <rect y="355" width="600" height="105" fill="#E3ECD9"/>
-          <path d="M0 370 Q150 352 300 368 T600 362 V460 H0Z" fill="#D4E3C7"/>
-        </svg>
-      </div>
+      <div class="hero-pic reveal"><img id="hero-img" alt="Гостевой дом Мичурино: двор и дома" fetchpriority="high"></div>
     </section>
 
     <section class="section" id="about">
@@ -77,13 +57,8 @@
           <div><p class="eyebrow">Фото</p><h2>Как у нас</h2></div>
           <a class="link" id="ig-link" target="_blank" rel="noopener">Больше в Instagram →</a>
         </div>
-        <div class="gallery">
-          <figure class="ph reveal">Фото дома снаружи</figure>
-          <figure class="ph reveal">Гостиная</figure>
-          <figure class="ph reveal">Спальня</figure>
-          <figure class="ph reveal">Беседка и мангал</figure>
-          <figure class="ph reveal">Территория</figure>
-        </div>
+        <div class="tabs-g" role="tablist" aria-label="Разделы фото" id="g-tabs"></div>
+        <div class="gallery" id="g-grid"></div>
       </div>
     </section>
 
@@ -134,6 +109,14 @@
       </div>
     </section>
   </main>
+
+  <dialog class="lb" id="lb" aria-label="Просмотр фото">
+    <img id="lb-img" alt="">
+    <button class="lb-btn lb-close" id="lb-close" aria-label="Закрыть">✕</button>
+    <button class="lb-btn lb-prev" id="lb-prev" aria-label="Предыдущее фото">‹</button>
+    <button class="lb-btn lb-next" id="lb-next" aria-label="Следующее фото">›</button>
+    <p class="lb-count" id="lb-count"></p>
+  </dialog>
 
   <footer class="footer">
     <div class="container foot">
