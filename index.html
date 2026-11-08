@@ -33,12 +33,8 @@
         <p class="eyebrow">Гостевой дом · Мичурино</p>
         <h1 data-c="hero.title"></h1>
         <p class="lead" data-c="hero.text"></p>
-        <div class="hero-actions">
+        <div class="hero-actions" id="hero-actions">
           <a class="btn" href="#booking" data-c="hero.button"></a>
-          <a class="btn btn-ghost" id="wa-hero" target="_blank" rel="noopener">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.6-.1 1.1Z"/></svg>
-            WhatsApp
-          </a>
         </div>
       </div>
       <div class="hero-pic reveal" aria-hidden="true">
@@ -112,6 +108,7 @@
           <h2 data-c="booking.title"></h2>
           <p class="lead" data-c="booking.text"></p>
           <p class="contact-line">Или звоните: <a id="phone-link"></a></p>
+          <p class="contact-line" id="wa-line"></p>
         </div>
         <form class="form reveal" id="booking-form" novalidate>
           <label>Ваше имя<input name="name" required autocomplete="name" placeholder="Айгерим"></label>
@@ -142,7 +139,7 @@
       <div class="brand"><img src="assets/logo.svg" alt="" width="54" height="29"><span><b data-c="name"></b><small data-c="tagline"></small></span></div>
       <div class="foot-links">
         <a id="phone-foot"></a>
-        <a id="wa-foot" target="_blank" rel="noopener">WhatsApp</a>
+        <span id="wa-foot" class="foot-links"></span>
         <a id="ig-foot" target="_blank" rel="noopener">Instagram</a>
       </div>
     </div>
