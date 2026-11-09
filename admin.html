@@ -80,7 +80,16 @@
         </div>
       </section>
       <section data-panel="access" hidden>
-        <h3 class="sub" style="margin-top:0">Запросы на доступ</h3>
+        <div class="card tg">
+          <h3>📲 Уведомления в Telegram</h3>
+          <p class="muted" id="tg-status">Загрузка…</p>
+          <div id="tg-chats" class="list"></div>
+          <div class="row-btns">
+            <button class="btn btn-small" id="tg-link">Подключить Telegram</button>
+            <button class="btn btn-small btn-ghost" id="tg-test" hidden>Отправить тест</button>
+          </div>
+        </div>
+        <h3 class="sub">Запросы на доступ</h3>
         <div id="req-list" class="list"></div>
         <h3 class="sub">Администраторы</h3>
         <div id="admin-list" class="list"></div>

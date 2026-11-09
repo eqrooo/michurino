@@ -70,3 +70,7 @@
 #noaccess h2 { margin: 0; }
 #req-msg { color: var(--green-700); }
 @media (max-width: 640px) { .pc.acc { grid-template-columns: 1fr; } }
+.card.tg { display: grid; gap: 12px; }
+.card.tg h3 { margin: 0; font-size: 18px; }
+.card.tg p { margin: 0; }
+.tg-chat { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-alt); border-radius: 10px; }

@@ -46,8 +46,34 @@
   });
   $('req-check').addEventListener('click', boot);
 
+  // ---------- Telegram ----------
+  async function tg(action, extra = {}) {
+    const { data, error } = await sb.functions.invoke('tg-link', { body: { action, ...extra } });
+    if (error) { $('tg-status').textContent = 'Ошибка связи, попробуйте позже'; return null; }
+    if (!data.configured) {
+      $('tg-status').innerHTML = data.error === 'bad_token' ? 'Токен бота неверный — проверьте TELEGRAM_BOT_TOKEN в Supabase.' : 'Бот ещё не настроен (нужен токен TELEGRAM_BOT_TOKEN в Supabase).';
+      $('tg-link').hidden = true; $('tg-test').hidden = true; $('tg-chats').innerHTML = ''; return data;
+    }
+    $('tg-link').hidden = false;
+    const n = data.chats.length;
+    $('tg-status').innerHTML = n ? `Бот <b>@${esc(data.bot)}</b> присылает заявки в ${n} ${n === 1 ? 'чат' : 'чата'}:` : `Бот <b>@${esc(data.bot)}</b> готов. Нажмите «Подключить Telegram» на телефоне, где у вас Telegram.`;
+    $('tg-test').hidden = !n;
+    $('tg-chats').innerHTML = data.chats.map((c) => `<div class="tg-chat"><span>👤 ${esc(c.name || ('чат ' + c.chat_id))}</span><button class="btn-danger" data-tgoff="${c.chat_id}">Отключить</button></div>`).join('');
+    return data;
+  }
+  $('tg-link').addEventListener('click', async () => {
+    const w = window.open('', '_blank');
+    const data = await tg('link');
+    if (data && data.link) { if (w) w.location = data.link; else location.href = data.link; toast('Нажмите «Start» в Telegram'); }
+    else { if (w) w.close(); toast('Не получилось'); }
+  });
+  $('tg-test').addEventListener('click', async () => { const d = await tg('test'); toast(d && d.tested ? 'Тест отправлен в Telegram' : 'Не получилось'); });
+  document.addEventListener('click', async (e) => { const b = e.target.closest('[data-tgoff]'); if (b && confirm('Отключить уведомления в этот чат?')) { await tg('unlink', { chat_id: +b.dataset.tgoff }); toast('Отключено'); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('panel').hidden) tg('status'); });
+
   // ---------- вкладка «Доступ» ----------
   async function loadAccess() {
+    tg('status');
     const { data: reqs } = await sb.from('admin_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false });
     const n = (reqs || []).length; $('req-count').textContent = n; $('req-count').hidden = !n;
     $('req-list').innerHTML = n ? reqs.map((r) => `<article class="card pc acc">
