@@ -5,6 +5,7 @@
   const dt = (s) => new Date(s).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const show = (id) => ['login', 'noaccess', 'panel'].forEach((x) => { $(x).hidden = x !== id; });
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => (t.hidden = true), 2500); };
+  const OBJ = { cottage: 'Коттедж', hall: 'Банкетный зал', banya: 'Баня', complex: 'Весь комплекс' };
   const STATUS = { new: 'Новая', confirmed: 'Подтверждена', done: 'Завершена', cancelled: 'Отменена' };
 
   // ---------- вход ----------
@@ -59,7 +60,7 @@
       const wa = phone.replace(/\D/g, '').replace(/^8/, '7');
       return `<article class="card bk">
         <div><h3>${esc(b.name)}</h3>
-          <div class="meta"><span class="dates">${d(b.date_in)} — ${d(b.date_out)}</span> · гостей: ${b.guests} · пришла ${dt(b.created_at)}</div></div>
+          <div class="meta"><span class="obj-tag">${OBJ[b.object] || ''}</span> <span class="dates">${b.date_out ? `${d(b.date_in)} — ${d(b.date_out)}` : d(b.date_in)}${b.hours ? ` · ${b.hours} ч` : ''}</span> · гостей: ${b.guests} · пришла ${dt(b.created_at)}</div></div>
         <span class="status st-${b.status}">${STATUS[b.status]}</span>
         ${b.comment ? `<p class="comment">${esc(b.comment)}</p>` : ''}
         <div class="actions">

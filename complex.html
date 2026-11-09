@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>О комплексе — Мичурино</title>
+  <meta name="description" content="Двухэтажный коттедж до 20 гостей, банкетный зал до 70 гостей, баня, беседка, мангальная зона и детская площадка в с. Тепличное.">
+  <link rel="icon" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-complex">
+  <header class="header" id="top">
+    <a class="brand" href="./">
+      <img src="assets/logo.svg" alt="" width="54" height="29">
+      <span><b data-c="name"></b><small data-c="tagline"></small></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="./">Главная</a>
+      <a href="#cottage">Коттедж</a>
+      <a href="#hall">Банкетный зал</a>
+      <a href="#banya">Баня</a>
+      <a href="#territory">Территория</a>
+    </nav>
+    <a class="btn btn-small" href="./#booking">Забронировать</a>
+    <button class="burger" id="burger" aria-label="Меню" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container reveal">
+        <a class="back" href="./">← На главную</a>
+        <p class="eyebrow">О комплексе</p>
+        <h1 data-c="complexPage.title"></h1>
+        <p class="lead" data-c="complexPage.intro"></p>
+        <nav class="jump" aria-label="Разделы">
+          <a href="#cottage">Коттедж</a><a href="#hall">Банкетный зал</a><a href="#banya">Баня</a><a href="#territory">Территория</a>
+        </nav>
+      </div>
+    </section>
+
+    <div id="object-sections"></div>
+
+    <section class="section alt" id="territory">
+      <div class="container">
+        <div class="section-head reveal"><div><p class="eyebrow">Территория</p><h2>Что ещё есть у нас</h2></div></div>
+        <div class="extras" id="extras"></div>
+        <div class="obj-photos wide" id="territory-photos"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container narrow reveal">
+        <p class="eyebrow">Мероприятия</p>
+        <h2 data-c="events.title"></h2>
+        <ul class="events big" id="events"></ul>
+      </div>
+    </section>
+
+    <section class="section booking-wrap cta">
+      <div class="container narrow reveal">
+        <p class="eyebrow light">Бронируйте отдых у нас</p>
+        <h2 data-c="complexPage.final"></h2>
+        <p class="lead" data-c="complexPage.cta"></p>
+        <div class="hero-actions" id="hero-actions">
+          <a class="btn btn-light" href="./#booking">Оставить заявку</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="lb" id="lb" aria-label="Просмотр фото">
+    <img id="lb-img" alt="">
+    <button class="lb-btn lb-close" id="lb-close" aria-label="Закрыть">✕</button>
+    <button class="lb-btn lb-prev" id="lb-prev" aria-label="Предыдущее фото">‹</button>
+    <button class="lb-btn lb-next" id="lb-next" aria-label="Следующее фото">›</button>
+    <p class="lb-count" id="lb-count"></p>
+  </dialog>
+
+  <footer class="footer">
+    <div class="container foot">
+      <div class="brand"><img src="assets/logo.svg" alt="" width="54" height="29"><span><b data-c="name"></b><small data-c="tagline"></small></span></div>
+      <div class="foot-links">
+        <a id="phone-foot"></a>
+        <span id="wa-foot" class="foot-links"></span>
+        <a id="ig-foot" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

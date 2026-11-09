@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Мичурино — гостевой дом</title>
-  <meta name="description" content="Гостевой дом Мичурино: тихий дом у леса. Бронирование онлайн.">
+  <title>Мичурино — коттедж, банкетный зал и баня</title>
+  <meta name="description" content="Комплекс Мичурино в с. Тепличное: двухэтажный коттедж до 20 гостей, банкетный зал до 70 гостей, баня. Бронирование онлайн.">
   <link rel="icon" href="assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,9 +17,9 @@
       <span><b data-c="name"></b><small data-c="tagline"></small></span>
     </a>
     <nav class="nav" id="nav">
-      <a href="#about">О доме</a>
-      <a href="#gallery">Фото</a>
+      <a href="complex.html">О комплексе</a>
       <a href="#prices">Цены</a>
+      <a href="#gallery">Фото</a>
       <a href="#news">Новости</a>
       <a href="#map">Как добраться</a>
     </nav>
@@ -30,14 +30,14 @@
   <main>
     <section class="hero">
       <div class="hero-text reveal">
-        <p class="eyebrow">Гостевой дом · Мичурино</p>
+        <p class="eyebrow">Мичурино · с. Тепличное</p>
         <h1 data-c="hero.title"></h1>
         <p class="lead" data-c="hero.text"></p>
         <div class="hero-actions" id="hero-actions">
           <a class="btn" href="#booking" data-c="hero.button"></a>
         </div>
       </div>
-      <div class="hero-pic reveal"><img id="hero-img" alt="Гостевой дом Мичурино: двор и дома" fetchpriority="high"></div>
+      <div class="hero-pic reveal"><img id="hero-img" alt="Комплекс Мичурино: двор и коттедж" fetchpriority="high"></div>
     </section>
 
     <section class="section" id="about">
@@ -46,8 +46,17 @@
           <p class="eyebrow">О нас</p>
           <h2 data-c="about.title"></h2>
           <p class="lead" data-c="about.text"></p>
+          <ul class="events" id="events"></ul>
+          <a class="btn btn-ghost" href="complex.html" data-c="about.more"></a>
         </div>
         <div class="features" id="features"></div>
+      </div>
+    </section>
+
+    <section class="section" id="prices">
+      <div class="container">
+        <div class="section-head reveal"><div><p class="eyebrow">Цены</p><h2>Что можно арендовать</h2></div><a class="link" href="complex.html">Все подробности →</a></div>
+        <div class="objects" id="objects"></div>
       </div>
     </section>
 
@@ -62,14 +71,7 @@
       </div>
     </section>
 
-    <section class="section" id="prices">
-      <div class="container">
-        <div class="section-head reveal"><div><p class="eyebrow">Цены</p><h2>Сколько стоит</h2></div></div>
-        <div class="prices" id="price-list"></div>
-      </div>
-    </section>
-
-    <section class="section alt" id="news">
+    <section class="section" id="news">
       <div class="container">
         <div class="section-head reveal"><div><p class="eyebrow">Новости</p><h2>Что нового</h2></div></div>
         <div class="posts" id="posts"></div>
@@ -88,11 +90,20 @@
         <form class="form reveal" id="booking-form" novalidate>
           <label>Ваше имя<input name="name" required autocomplete="name" placeholder="Айгерим"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 (___) ___-__-__"></label>
+          <label>Что бронируете
+            <select name="object">
+              <option value="cottage">Коттедж (проживание)</option>
+              <option value="hall">Банкетный зал (торжество)</option>
+              <option value="banya">Баня</option>
+              <option value="complex">Весь комплекс</option>
+            </select>
+          </label>
           <div class="row">
-            <label>Заезд<input name="date_in" type="date" required></label>
-            <label>Выезд<input name="date_out" type="date" required></label>
+            <label><span id="lbl-in">Заезд</span><input name="date_in" type="date" required></label>
+            <label id="row-out">Выезд<input name="date_out" type="date"></label>
+            <label id="row-hours" hidden>Сколько часов<input name="hours" type="number" min="3" max="24" value="3"></label>
           </div>
-          <label>Сколько гостей<input name="guests" type="number" min="1" max="30" value="2"></label>
+          <label>Сколько гостей<input name="guests" type="number" min="1" max="150" value="2"></label>
           <label>Комментарий<textarea name="comment" rows="3" placeholder="Пожелания, вопросы"></textarea></label>
           <p class="form-error" id="form-error" role="alert"></p>
           <button class="btn btn-full" type="submit">Отправить заявку</button>
@@ -104,7 +115,7 @@
     <section class="section" id="map">
       <div class="container">
         <div class="section-head reveal"><div><p class="eyebrow">Как добраться</p><h2>Мы на карте</h2></div><p class="muted" data-c="address"></p></div>
-        <div class="map reveal"><iframe id="map-frame" title="Гостевой дом Мичурино на карте 2ГИС" loading="lazy"></iframe></div>
+        <div class="map reveal"><iframe id="map-frame" title="Мичурино на карте 2ГИС" loading="lazy"></iframe></div>
         <div class="map-actions"><a class="btn" id="map-link" target="_blank" rel="noopener">Открыть в 2ГИС и проложить маршрут</a></div>
       </div>
     </section>
