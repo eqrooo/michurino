@@ -1,7 +1,7 @@
 # Мичурино — гостевой дом
 
-Сайт: https://eqrooo.github.io/michurino/
-Админка: https://eqrooo.github.io/michurino/admin.html
+Сайт: https://michurino.asia/
+Админка: https://michurino.asia/admin.html
 
 ## Как поменять тексты, цены, телефон
 Открой `content.js`, меняй только то, что в кавычках, сохрани и загрузи изменения.
