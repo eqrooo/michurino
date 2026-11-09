@@ -63,3 +63,10 @@
   .pc .btn-danger { grid-column: 1 / -1; }
 }
 .obj-tag { display: inline-block; background: var(--green-100); color: var(--green-900); font-weight: 700; font-size: 12px; padding: 2px 9px; border-radius: 999px; margin-right: 4px; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pc.acc { grid-template-columns: 1fr auto; }
+.muted.small { font-size: 14px; margin-top: 20px; }
+#noaccess .card { width: min(460px, 100%); display: grid; gap: 12px; }
+#noaccess h2 { margin: 0; }
+#req-msg { color: var(--green-700); }
+@media (max-width: 640px) { .pc.acc { grid-template-columns: 1fr; } }

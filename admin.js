@@ -15,7 +15,8 @@
     const { data: isAdmin } = await sb.rpc('is_admin');
     if (!isAdmin) return show('noaccess');
     show('panel');
-    loadBookings(); loadPosts();
+    loadBookings(); loadPosts(); loadAccess();
+    if (location.hash === '#access') document.querySelector('[data-tab="access"]').click();
   }
   $('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -32,11 +33,55 @@
   });
   document.querySelectorAll('[data-logout]').forEach((b) => b.addEventListener('click', async () => { await sb.auth.signOut(); show('login'); }));
 
+  // ---------- запрос доступа ----------
+  $('req-btn').addEventListener('click', async () => {
+    const m = $('req-msg'); const btn = $('req-btn'); btn.disabled = true;
+    const { data, error } = await sb.rpc('request_admin');
+    if (error) { m.textContent = 'Ошибка, попробуйте позже'; btn.disabled = false; return; }
+    if (data === 'already_admin') return boot();
+    if (data === 'too_soon') { m.textContent = 'Запрос уже отправлен недавно — дождитесь подтверждения.'; btn.disabled = false; return; }
+    const { data: r } = await sb.functions.invoke('notify-admin');
+    m.textContent = r && r.sent ? 'Запрос отправлен! Владельцу ушло письмо. После подтверждения нажмите «Проверить».'
+      : 'Запрос сохранён. Владелец увидит его в админке во вкладке «Доступ». После подтверждения нажмите «Проверить».';
+  });
+  $('req-check').addEventListener('click', boot);
+
+  // ---------- вкладка «Доступ» ----------
+  async function loadAccess() {
+    const { data: reqs } = await sb.from('admin_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false });
+    const n = (reqs || []).length; $('req-count').textContent = n; $('req-count').hidden = !n;
+    $('req-list').innerHTML = n ? reqs.map((r) => `<article class="card pc acc">
+        <div><h4>${esc(r.email)}</h4><time>запрос: ${dt(r.created_at)}</time></div>
+        <div class="row-btns"><button class="btn btn-small" data-ok="${r.id}">Подтвердить</button><button class="btn-danger" data-no="${r.id}">Отклонить</button></div>
+      </article>`).join('') : '<p class="empty">Новых запросов нет</p>';
+    const { data: admins } = await sb.rpc('list_admins');
+    const { data: { user } } = await sb.auth.getUser();
+    $('admin-list').innerHTML = (admins || []).map((a) => `<article class="card pc acc">
+        <div><h4>${esc(a.email)}${a.user_id === user.id ? ' <span class="obj-tag">это вы</span>' : ''}</h4><time>админ с ${dt(a.created_at)}</time></div>
+        ${a.user_id === user.id ? '' : `<button class="btn-danger" data-rm="${a.user_id}" data-email="${esc(a.email)}">Убрать доступ</button>`}
+      </article>`).join('');
+  }
+  document.addEventListener('click', async (e) => {
+    const ok = e.target.closest('[data-ok]'), no = e.target.closest('[data-no]'), rm = e.target.closest('[data-rm]');
+    if (ok || no) {
+      const id = +(ok || no).dataset[ok ? 'ok' : 'no'];
+      if (no && !confirm('Отклонить запрос?')) return;
+      const { data } = await sb.rpc('decide_admin', { req_id: id, approve: !!ok });
+      toast(data === 'ok' ? (ok ? 'Доступ выдан' : 'Запрос отклонён') : 'Не получилось'); loadAccess();
+    }
+    if (rm) {
+      if (!confirm(`Убрать доступ у ${rm.dataset.email}?`)) return;
+      const { data } = await sb.rpc('remove_admin', { target: rm.dataset.rm });
+      toast(data === 'ok' ? 'Доступ убран' : 'Не получилось'); loadAccess();
+    }
+  });
+
   // ---------- вкладки ----------
   document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x === b));
     document.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== b.dataset.tab; });
     if (b.dataset.tab === 'stats') loadStats();
+    if (b.dataset.tab === 'access') loadAccess();
   }));
 
   // ---------- заявки ----------

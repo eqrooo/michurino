@@ -25,9 +25,14 @@
 
   <section id="noaccess" class="login" hidden>
     <div class="card">
-      <h2>Почти готово</h2>
-      <p>Вход создан, но доступ к админке ещё не выдан. Напиши программисту — он включит.</p>
-      <button class="btn btn-ghost" data-logout>Выйти</button>
+      <h2>Нужен доступ</h2>
+      <p>Вы вошли, но прав администратора пока нет. Отправьте запрос — владельцу придёт письмо, и после подтверждения админка откроется.</p>
+      <p class="form-error" id="req-msg" role="status"></p>
+      <div class="row-btns">
+        <button class="btn" id="req-btn">Запросить доступ</button>
+        <button class="btn btn-ghost" id="req-check">Проверить</button>
+        <button class="link-btn" data-logout>Выйти</button>
+      </div>
     </div>
   </section>
 
@@ -39,6 +44,7 @@
         <button role="tab" data-tab="bookings" aria-selected="true">Заявки <span id="new-count" class="badge" hidden></span></button>
         <button role="tab" data-tab="posts">Посты</button>
         <button role="tab" data-tab="stats">Посещения</button>
+        <button role="tab" data-tab="access">Доступ <span id="req-count" class="badge" hidden></span></button>
       </nav>
       <button class="link-btn" data-logout>Выйти</button>
     </header>
@@ -72,6 +78,13 @@
           <h3>За последние 14 дней</h3>
           <div class="bars" id="bars"></div>
         </div>
+      </section>
+      <section data-panel="access" hidden>
+        <h3 class="sub" style="margin-top:0">Запросы на доступ</h3>
+        <div id="req-list" class="list"></div>
+        <h3 class="sub">Администраторы</h3>
+        <div id="admin-list" class="list"></div>
+        <p class="muted small">Как добавить человека: он открывает админку, жмёт «Первый раз? Создать вход», подтверждает почту, входит и нажимает «Запросить доступ». Вам придёт письмо — подтвердите здесь.</p>
       </section>
     </main>
   </div>

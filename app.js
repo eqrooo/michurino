@@ -168,6 +168,17 @@
   }), { threshold: 0.08 });
   document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + 'ms'; io.observe(el); });
 
+  // ---------- скрытый вход в админку: 5 быстрых нажатий по логотипу внизу ----------
+  const fb = document.querySelector('.footer .brand');
+  if (fb) {
+    let taps = 0, t = null;
+    fb.style.cursor = 'default'; fb.style.userSelect = 'none'; fb.style.webkitTapHighlightColor = 'transparent';
+    fb.addEventListener('click', () => {
+      taps++; clearTimeout(t); t = setTimeout(() => (taps = 0), 1500);
+      if (taps >= 5) { taps = 0; location.href = 'admin.html'; }
+    });
+  }
+
   // ---------- форма брони ----------
   const form = $('booking-form');
   if (!form) return;
