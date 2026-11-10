@@ -18,32 +18,77 @@
     loadBookings(); loadPosts(); loadAccess();
     if (location.hash === '#access') document.querySelector('[data-tab="access"]').click();
   }
+  // вкладки «Вход / Регистрация»
+  document.querySelectorAll('[data-auth]').forEach((b) => b.addEventListener('click', () => {
+    const up = b.dataset.auth === 'up';
+    document.querySelectorAll('[data-auth]').forEach((x) => x.setAttribute('aria-selected', x === b));
+    $('login-form').hidden = up; $('signup-form').hidden = !up;
+    $('login-error').textContent = ''; $('signup-error').textContent = '';
+    (up ? $('signup-form') : $('login-form')).email.focus();
+  }));
+  const busy = (form, on, text) => { const b = form.querySelector('button[type=submit]'); b.disabled = on; if (text) b.textContent = text; };
+  const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
   $('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const f = e.target; $('login-error').textContent = '';
-    const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
-    if (error) { $('login-error').textContent = 'Неверная почта или пароль (или почта ещё не подтверждена)'; return; }
+    const f = e.target, err = $('login-error'); err.textContent = '';
+    const email = f.email.value.trim();
+    if (!emailOk(email)) { err.textContent = 'Проверьте почту'; f.email.focus(); return; }
+    if (!f.password.value) { err.textContent = 'Введите пароль'; f.password.focus(); return; }
+    busy(f, true, 'Входим…');
+    const { error } = await sb.auth.signInWithPassword({ email, password: f.password.value });
+    busy(f, false, 'Войти');
+    if (error) {
+      const m = (error.message || '').toLowerCase();
+      err.textContent = m.includes('invalid') ? 'Неверная почта или пароль. Если вы ещё не регистрировались — откройте вкладку «Регистрация».'
+        : m.includes('rate') || m.includes('too many') ? 'Слишком много попыток. Подождите пару минут.'
+        : 'Не получилось войти. Проверьте интернет и попробуйте ещё раз.';
+      return;
+    }
     boot();
   });
-  $('signup-btn').addEventListener('click', async () => {
-    const f = $('login-form'); $('login-error').textContent = '';
-    if (!f.reportValidity()) return;
-    const { error } = await sb.auth.signUp({ email: f.email.value.trim(), password: f.password.value });
-    $('login-error').textContent = error ? 'Ошибка: ' + error.message : 'Готово! Подтверди почту по ссылке из письма, потом войди.';
+
+  $('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, err = $('signup-error'); err.textContent = '';
+    const email = f.email.value.trim();
+    if (!emailOk(email)) { err.textContent = 'Проверьте почту'; f.email.focus(); return; }
+    if (f.password.value.length < 8) { err.textContent = 'Пароль должен быть не короче 8 символов'; f.password.focus(); return; }
+    if (f.password.value !== f.password2.value) { err.textContent = 'Пароли не совпадают'; f.password2.focus(); return; }
+    busy(f, true, 'Создаём аккаунт…');
+    const { data, error } = await sb.functions.invoke('register', { body: { email, password: f.password.value } });
+    let code = data && data.error;
+    if (error && error.context && typeof error.context.json === 'function') { try { code = (await error.context.json()).error; } catch (_) {} }
+    if (error || !data || !data.ok) {
+      busy(f, false, 'Зарегистрироваться');
+      err.textContent = code === 'exists' ? 'Эта почта уже зарегистрирована — войдите во вкладке «Вход».'
+        : code === 'weak_password' ? 'Пароль слишком простой — минимум 8 символов.'
+        : code === 'bad_email' ? 'Проверьте почту'
+        : code === 'too_many' ? 'Слишком много регистраций, попробуйте через час.'
+        : 'Не получилось зарегистрироваться. Попробуйте ещё раз.';
+      return;
+    }
+    const { error: e2 } = await sb.auth.signInWithPassword({ email, password: f.password.value });
+    busy(f, false, 'Зарегистрироваться');
+    if (e2) { err.textContent = 'Аккаунт создан, но войти не получилось — попробуйте во вкладке «Вход».'; return; }
+    await requestAccess(true);
+    boot();
   });
   document.querySelectorAll('[data-logout]').forEach((b) => b.addEventListener('click', async () => { await sb.auth.signOut(); show('login'); }));
 
   // ---------- запрос доступа ----------
-  $('req-btn').addEventListener('click', async () => {
-    const m = $('req-msg'); const btn = $('req-btn'); btn.disabled = true;
+  async function requestAccess(silent) {
+    const m = $('req-msg'), btn = $('req-btn'); btn.disabled = true;
     const { data, error } = await sb.rpc('request_admin');
-    if (error) { m.textContent = 'Ошибка, попробуйте позже'; btn.disabled = false; return; }
+    btn.disabled = false;
+    if (error) { m.textContent = 'Ошибка, попробуйте позже'; return; }
     if (data === 'already_admin') return boot();
-    if (data === 'too_soon') { m.textContent = 'Запрос уже отправлен недавно — дождитесь подтверждения.'; btn.disabled = false; return; }
+    if (data === 'too_soon') { if (!silent) m.textContent = 'Запрос уже отправлен недавно — дождитесь подтверждения.'; return; }
     const { data: r } = await sb.functions.invoke('notify-admin');
-    m.textContent = r && r.sent ? 'Запрос отправлен! Владельцу ушло письмо. После подтверждения нажмите «Проверить».'
-      : 'Запрос сохранён. Владелец увидит его в админке во вкладке «Доступ». После подтверждения нажмите «Проверить».';
-  });
+    m.textContent = r && r.sent ? '✅ Запрос отправлен владельцу. Когда он подтвердит — нажмите «Проверить».'
+      : '✅ Запрос сохранён — владелец увидит его в админке. Когда подтвердит — нажмите «Проверить».';
+  }
+  $('req-btn').addEventListener('click', () => requestAccess(false));
   $('req-check').addEventListener('click', boot);
 
   // ---------- Telegram ----------

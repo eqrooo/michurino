@@ -74,3 +74,11 @@
 .card.tg h3 { margin: 0; font-size: 18px; }
 .card.tg p { margin: 0; }
 .tg-chat { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-alt); border-radius: 10px; }
+.card.auth { width: min(420px, 100%); display: grid; gap: 16px; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg-alt); padding: 4px; border-radius: 999px; }
+.auth-tabs button { border: 0; background: none; padding: 10px; border-radius: 999px; font: 600 15px Manrope, sans-serif; color: var(--muted); cursor: pointer; min-height: 44px; }
+.auth-tabs button[aria-selected="true"] { background: #fff; color: var(--green-900); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.card.auth .form { padding: 0; background: none; }
+.hint { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
+.hint.top { text-align: left; background: var(--green-100); color: var(--green-900); padding: 10px 12px; border-radius: 10px; }
+.form label small { font-weight: 400; color: var(--muted); }
