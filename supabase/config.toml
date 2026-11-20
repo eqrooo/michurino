@@ -1,0 +1,21 @@
+# Supabase project: michurino (ref suerxffntlexrhqujywj, region eu-central-1)
+# Только настройки Edge Functions — чтобы `supabase functions deploy` ставил правильный verify_jwt.
+project_id = "suerxffntlexrhqujywj"
+
+[functions.tg-booking]
+verify_jwt = false   # вызывается триггером БД
+
+[functions.tg-webhook]
+verify_jwt = false   # вызывается Telegram, защита — секретный заголовок
+
+[functions.tg-setup]
+verify_jwt = false   # идемпотентная переустановка вебхука
+
+[functions.register]
+verify_jwt = false   # регистрация без входа
+
+[functions.tg-link]
+verify_jwt = true
+
+[functions.notify-admin]
+verify_jwt = true
