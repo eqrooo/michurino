@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 
 // Сюда Telegram присылает сообщения и нажатия кнопок. Проверяем секретный заголовок.
 const ADMIN_URL = "https://michurino.asia/admin.html";
+const DATES_URL = "https://michurino.asia/tg.html";
 const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
 async function secretFor(token: string) {
   const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("michurino:" + token));
@@ -69,15 +70,20 @@ Deno.serve(async (req) => {
     const msg = upd?.message;
     if (!msg?.chat?.id || typeof msg.text !== "string") return new Response("ok");
     const chatId = msg.chat.id;
-    const adminBtn = { inline_keyboard: [[{ text: "📒 Открыть админку", url: ADMIN_URL }]] };
+    // кнопка мини-приложения работает только в личном чате (chat_id > 0)
+    const adminBtn = { inline_keyboard: [
+      ...(chatId > 0 ? [[{ text: "📅 Занятые даты", web_app: { url: DATES_URL } }]] : []),
+      [{ text: "📒 Открыть админку", url: ADMIN_URL }],
+    ] };
     const send = async (text: string, withBtn = true) => {
       const r = await tg("sendMessage", { chat_id: chatId, text, parse_mode: "HTML", ...(withBtn ? { reply_markup: adminBtn } : {}) });
       if (!r.ok) console.error("telegram send error", r.description);
     };
     // кнопка «Админка» слева от поля ввода, команды и приём нажатий кнопок
     const setup = () => Promise.all([
-      tg("setChatMenuButton", { chat_id: chatId, menu_button: { type: "web_app", text: "Админка", web_app: { url: ADMIN_URL } } }),
+      tg("setChatMenuButton", { chat_id: chatId, menu_button: chatId > 0 ? { type: "web_app", text: "Даты", web_app: { url: DATES_URL } } : { type: "commands" } }),
       tg("setMyCommands", { commands: [
+        { command: "dates", description: "Занятые даты (календарь)" },
         { command: "admin", description: "Открыть админку" },
         { command: "stop", description: "Отключить уведомления" },
       ] }),
@@ -104,10 +110,13 @@ Deno.serve(async (req) => {
       const { error: e2 } = await db.from("tg_chats").upsert({ chat_id: chatId, user_id: row.user_id, name });
       if (e2) console.error("save chat", e2);
       await setup();
-      await send("✅ <b>Готово!</b> Сюда будут приходить новые заявки с сайта и запросы доступа к админке (их можно подтверждать прямо здесь).\n\nАдминка всегда под рукой: кнопка «Админка» слева от поля ввода или команда /admin.\nОтключить уведомления — /stop");
+      await send("✅ <b>Готово!</b> Сюда будут приходить новые заявки с сайта и запросы доступа к админке (их можно подтверждать прямо здесь).\n\n📅 Занятые даты — кнопка «Даты» слева от поля ввода или команда /dates.\nВся админка — /admin. Отключить уведомления — /stop");
     } else if (text.startsWith("/stop")) {
       await db.from("tg_chats").delete().eq("chat_id", chatId);
       await send("Уведомления отключены. Чтобы включить снова — нажмите «Подключить Telegram» в админке.");
+    } else if (linked && text.startsWith("/dates")) {
+      await setup();
+      await send("📅 Отметьте занятые даты — гости сразу увидят их на сайте:");
     } else if (linked) {
       await setup();
       await send("📒 Админка Мичурино:");

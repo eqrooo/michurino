@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   if (action === "test") {
     const chats = await listChats();
     const rs = await Promise.all(chats.map((c) => Promise.all([
-      tg("setChatMenuButton", { chat_id: c.chat_id, menu_button: { type: "web_app", text: "Админка", web_app: { url: "https://michurino.asia/admin.html" } } }),
+      tg("setChatMenuButton", { chat_id: c.chat_id, menu_button: c.chat_id > 0 ? { type: "web_app", text: "Даты", web_app: { url: "https://michurino.asia/tg.html" } } : { type: "commands" } }),
       tg("sendMessage", { chat_id: c.chat_id, text: "👋 Проверка: уведомления с сайта Мичурино работают.",
         reply_markup: { inline_keyboard: [[{ text: "📒 Открыть админку", url: "https://michurino.asia/admin.html" }]] } }),
     ]).then(([, s]) => s)));

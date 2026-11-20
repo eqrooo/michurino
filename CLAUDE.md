@@ -21,8 +21,9 @@
 ## Стек и архитектура
 - **Фронт**: чистый статический HTML/CSS/JS, без сборки. GitHub Pages + домен `michurino.asia` (файл `CNAME`; DNS у ps.kz: A → 185.199.108.153, www CNAME → michurino.asia). HTTPS работает.
 - **Бэкенд**: Supabase (project ref `suerxffntlexrhqujywj`, eu-central-1, free tier). Postgres + RLS, Auth (email+пароль), Storage (bucket `post-images`), Edge Functions (Deno).
-- Клиент Supabase: `@supabase/supabase-js@2.117.3` UMD с jsDelivr; ключ — **publishable** (`config.js`, публичный по задумке).
-- `.github/workflows/keep-alive.yml` — пинг базы раз в 2 дня, чтобы free-проект Supabase не засыпал.
+- Клиент Supabase: `@supabase/supabase-js@2.117.3` UMD, **лежит в репо** (`vendor/supabase-2.117.3.js`, чтобы не зависеть от CDN); ключ — **publishable** (`config.js`, публичный по задумке).
+- `.github/workflows/keep-alive.yml` — раз в 2 дня: пинг базы, **сам себе продлевает расписание** (`PUT …/workflows/keep-alive.yml/enable` — GitHub отключает cron после 60 дней без активности), проверка сайта и срока домена (падает за 30 дней до истечения → письмо владельцу репо).
+- Резервный keep-alive внутри базы: pg_cron `michurino-keepalive` (раз в сутки `net.http_get` на REST). Ещё pg_cron `michurino-cleanup` (ежечасно `private.cleanup()`).
 
 ## Файлы
 | Файл | Что это |
@@ -32,7 +33,11 @@
 | `content.js` | **Все тексты, цены, контакты, список фото по вкладкам** (`gallery`, `objects`, `extras`, …). Единственный файл, который правит владелец |
 | `app.js` | Общий скрипт обеих страниц (с проверками наличия элементов). Рендер, лайтбокс, карта, посты, счётчик визитов, форма брони, скрытый вход в админку (5 тапов по логотипу в футере) |
 | `styles.css` | Стили. Токены в `:root`, бело-зелёная палитра, шрифты Cormorant Garamond + Manrope (кириллица) |
-| `admin.html/js/css` | Админка: вход/регистрация (две вкладки), вкладки «Заявки», «Посты», «Посещения», «Доступ» (запросы доступа, список админов, подключение Telegram) |
+| `admin.html/js/css` | Админка: вход/регистрация (две вкладки), вкладки «Заявки», «Даты», «Посты», «Посещения», «Доступ» (запросы доступа, список админов, подключение Telegram). При смене статуса заявки на «Подтверждена» предлагает отметить её даты в календаре |
+| `calendar.js` | `window.MCal`: рендер календаря, разбор дат текстом («25.12, 31.12–02.01, 5, 6 января»), отрезки. Общий для сайта/админки/Telegram |
+| `dates-editor.js` | `window.MDates.mount(el, api)`: редактор занятых дат (выбор объекта, клики по дням, ввод текстом, список). Используется в админке и `tg.html` с разными адаптерами |
+| `tg.html` | Telegram-мини-приложение «Занятые даты» (кнопка меню «Даты» в боте, /dates). Без пароля: ходит в функцию `tg-dates` с `initData` |
+| `vendor/` | Закреплённые копии внешних библиотек |
 | `config.js` | URL Supabase + publishable key. Не трогать |
 | `photos/<street|house2|house1|banya>/NN.jpg` и `NN-s.jpg` | Фото: большое (≤1600px) и превью (≤640px). house2 = коттедж, house1 = банкетный зал |
 | `supabase/migrations/*.sql` | Схема БД (точная копия применённых миграций) |
@@ -43,11 +48,16 @@
 - `bookings` — заявки (`object` cottage/hall/banya/complex, `date_in`, `date_out` nullable, `hours` для бани, `guests` ≤150, `status` new/confirmed/done/cancelled, `tg_sent`). Аноним может только INSERT со status='new'. Читают/меняют только админы.
 - `posts` — новости; публичное чтение published. Фото в Storage `post-images` (пишут только админы).
 - `visits` — счётчик посещений без личных данных.
+- `booked_dates` (`day`, `object` cottage/hall, PK day+object, `created_by`) — занятые даты. Аноним/все видят **только колонки day, object** (column grants: в запросах писать `select('day,object')`, `*` даст 42501). Пишут/удаляют только админы. Старше года — удаляются cron'ом.
 - `admins` — кто админ. Функция `is_admin()` используется во всех RLS-политиках.
 - `admin_requests` + RPC `request_admin()`, `decide_admin()`, `list_admins()`, `remove_admin()` — флоу выдачи доступа.
 - `tg_chats`, `tg_link_codes` — привязка Telegram-чатов админов. RLS включён, политик нет (доступ только service role из функций).
 - Триггер `bookings_notify_tg` → `pg_net` POST на функцию `tg-booking`.
 - Предупреждения линтера про SECURITY DEFINER функции — **ожидаемые**: внутри каждая проверяет `is_admin()`/`auth.uid()`.
+- Схема `private` (не видна через API): `settings` (секретная соль `ip_salt`), `rate_hits` (хеш IP + время, IP не хранится), функции `ip_key()`, `hits()`, `cleanup()`.
+- Антиспам (триггеры BEFORE INSERT): `bookings_guard` — даты не в прошлом/не дальше ~2 лет, служебные поля (status/tg_sent/created_at) подменить нельзя, лимит 3 заявки/10 мин и 8/сутки с одного IP, 30/час всего (ошибка `rate_limited`). `visits_guard` — >20/час с IP или >3000/час всего молча отбрасываются. На форме ещё honeypot-поле `website`.
+- `request_admin()` — не чаще 5 запросов доступа в час от всех вместе (`too_many`).
+- Триггер `admins_removed`: убрали админа → удаляются его `tg_chats` и коды привязки (Telegram сразу перестаёт получать заявки).
 
 ## Edge Functions
 | Функция | verify_jwt | Назначение |
@@ -55,9 +65,10 @@
 | `tg-booking` | false | Новая заявка → сообщение в Telegram всем `tg_chats` (кнопки WhatsApp / Открыть админку). Идемпотентно через `tg_sent` |
 | `tg-webhook` | false | Вебхук Telegram-бота. Проверяет заголовок `X-Telegram-Bot-Api-Secret-Token` = sha256("michurino:"+token)[:48]. `/start <code>` — привязка чата, `/stop`, `/admin`; callback-кнопки `acc:ok:<id>` / `acc:no:<id>` — подтвердить/отклонить запрос доступа (только из привязанного чата действующего админа). Ставит menu button «Админка» (web_app) |
 | `tg-link` | true | Из админки: статус бота, одноразовая ссылка привязки, тест, отвязка. Держит вебхук с `allowed_updates: ["message","callback_query"]` |
-| `tg-setup` | false | Идемпотентно переустанавливает вебхук. `curl -X POST https://suerxffntlexrhqujywj.supabase.co/functions/v1/tg-setup -H "apikey: <publishable key>"` |
+| `tg-setup` | false | Идемпотентно переустанавливает вебхук, команды (/dates, /admin, /stop) и кнопку меню «Даты» → `tg.html` у всех личных чатов. `curl -X POST https://suerxffntlexrhqujywj.supabase.co/functions/v1/tg-setup -H "apikey: <publishable key>"` |
 | `notify-admin` | true | Пользователь запросил доступ → Telegram (с кнопками) + email через Resend, если задан `RESEND_API_KEY` |
 | `register` | false | Регистрация админа без письма-подтверждения (`auth.admin.createUser`, email_confirm=true). Лимит 10 регистраций/час. Прав не даёт |
+| `tg-dates` | false | API мини-приложения `tg.html`: проверяет подпись Telegram `initData` (HMAC, срок 2 суток) → `tg_chats.chat_id = user.id` → действующий админ. `list` / `add` / `remove` (days ISO, objects cottage/hall, ≤400 дней) через service role |
 
 Секреты в Supabase (значения у владельца, не в репо): `TELEGRAM_BOT_TOKEN` (задан), `RESEND_API_KEY` (возможно не задан — тогда письма не шлются, всё работает через Telegram). Опционально `ADMIN_EMAIL`, `SITE_URL`.
 
@@ -65,7 +76,8 @@
 - **Фронт**: коммит + push в `main` → GitHub Pages обновляется за 1–2 мин. Коммиты от имени `eqrooo`.
 - **Функции**: `supabase functions deploy <name> --project-ref suerxffntlexrhqujywj` (или через Supabase MCP `deploy_edge_function`; verify_jwt брать из таблицы выше!).
 - **Схема**: новые миграции — отдельным файлом в `supabase/migrations/` + применить (`supabase db push` или MCP `apply_migration`).
-- ⚠️ **Перед деплоем функции проверяй синтаксис** (`deno check` или хотя бы TS transpile). Однажды `await` внутри не-async стрелки уронил бота с 503 — кнопки в Telegram «мигали» и не работали.
+- ⚠️ **Перед деплоем функции проверяй синтаксис** (`deno check` или хотя бы TS transpile; deno на компе нет — работает `npx esbuild <file> --loader:.ts=ts`). Правки русских строк через Python heredoc однажды превратили `
+` в настоящий перенос — проверка это поймала. Однажды `await` внутри не-async стрелки уронил бота с 503 — кнопки в Telegram «мигали» и не работали.
 - После изменений в схеме — `get_advisors` (security).
 
 ## Проверка
@@ -74,11 +86,13 @@
 - Тестовая заявка шлёт реальное сообщение владельцу в Telegram — предупреждай или не делай без нужды.
 
 ## Статус на 20.11.2026 и что открыто
-Готово: сайт, страница комплекса, фото, цены, карта, бронь с выбором объекта, админка (заявки/посты/статистика/доступ), регистрация без писем, Telegram-уведомления о заявках и запросах доступа с кнопками подтверждения, домен + HTTPS, keep-alive.
+Готово: сайт, страница комплекса, фото, цены, карта, бронь с выбором объекта, админка (заявки/даты/посты/статистика/доступ), регистрация без писем, Telegram-уведомления о заявках и запросах доступа с кнопками подтверждения, **календарь занятых дат** (сайт + вкладка «Даты» + мини-приложение в Telegram), антиспам, автоуборка, двойной keep-alive, домен + HTTPS (Enforce HTTPS включён).
 
-Проверить в начале работы:
-1. Висят ли в `admin_requests` запросы со статусом `pending` и подтвердил ли их владелец кнопками в Telegram (после фикса бота 10.11 он должен был нажать ещё раз).
-2. В GitHub → Settings → Pages включена ли галочка «Enforce HTTPS».
-3. Задан ли `RESEND_API_KEY` (если нет — и не надо, Telegram основной канал).
+Проверено 20.11: pending-запросов доступа нет (все 6 обработаны; 4 из одобренных потом убраны из админов — вероятно, тестовые). Админов трое (список — в админке, вкладка «Доступ»). `RESEND_API_KEY` через MCP не проверить (не обязателен).
 
-Идеи, которые обсуждались, но не сделаны: защита формы от спама (Cloudflare Turnstile), сброс пароля в админке, автопродление домена у ps.kz (напомнить владельцу продлевать раз в год).
+Осталось сделать **владельцу** (через дашборды, не через код):
+1. Supabase → Authentication → Sign In / Providers → выключить «Allow new users to sign up» (сейчас `disable_signup: false` — кто угодно может создать неподтверждённый аккаунт напрямую через API; наша регистрация идёт через функцию `register` и продолжит работать).
+2. Домен michurino.asia оплачен до **09.11.2027** — продлить на ps.kz заранее (лучше сразу на несколько лет / автопродление). Workflow предупредит за 30 дней.
+3. В Auth есть 4 аккаунта без прав (бывшие/тестовые) — удалить, если не нужны (спросить владельца). Почты в репо не писать — он публичный.
+
+Идеи, которые обсуждались, но не сделаны: Cloudflare Turnstile на форму (сейчас хватает лимитов + honeypot), сброс пароля в админке.

@@ -35,12 +35,13 @@ Deno.serve(async (req) => {
   ].filter((x) => x !== null).join("\n");
   const row = [{ text: "📒 Открыть админку", url: "https://michurino.asia/admin.html" }];
   if (phoneDigits.length >= 10) row.unshift({ text: "💬 WhatsApp", url: `https://wa.me/${phoneDigits}` });
-  const reply_markup = { inline_keyboard: [row] };
+  const datesRow = [{ text: "📅 Отметить даты", web_app: { url: "https://michurino.asia/tg.html" } }];
 
   const sendTo = async (chat_id: number) => {
     const call = (payload: unknown) => fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
     }).then((r) => r.json()).catch((e) => ({ ok: false, description: String(e) }));
+    const reply_markup = { inline_keyboard: chat_id > 0 ? [row, datesRow] : [row] };
     let r = await call({ chat_id, text, parse_mode: "HTML", reply_markup });
     if (!r.ok) {
       console.error("telegram error", chat_id, r.description);

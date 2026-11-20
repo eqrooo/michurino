@@ -235,3 +235,70 @@ a.feature:hover h3 { color: var(--green-700); }
   .obj-photos { position: static; grid-auto-rows: 140px; }
   .obj-photos.wide { grid-template-columns: 1fr 1fr; grid-auto-rows: 140px; }
 }
+
+/* ===== календарь занятых дат ===== */
+:root { --cottage: #2F5A35; --hall: #C9A066; --hall-ink: #2E2312; }
+.cal-card { background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: clamp(16px, 3vw, 30px); box-shadow: 0 24px 50px -40px rgba(31,58,36,.45); }
+.cal { position: relative; }
+.cal-top { position: absolute; inset: 0 0 auto 0; display: flex; justify-content: space-between; pointer-events: none; z-index: 1; }
+.cal-nav { pointer-events: auto; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--line); background: #fff; color: var(--green-700); font: 500 26px/1 Manrope, sans-serif; cursor: pointer; display: grid; place-items: center; padding: 0 0 3px; transition: all .2s var(--ease); }
+.cal-nav:hover:not(:disabled) { border-color: var(--green-500); background: var(--green-100); }
+.cal-nav:disabled { opacity: .3; cursor: default; }
+.cal-months { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 4vw, 48px); }
+.cal-title { margin: 0 0 14px; text-align: center; font: 600 26px/44px "Cormorant Garamond", serif; color: var(--green-900); text-transform: capitalize; }
+.cal-title span { color: var(--wood); }
+.cal-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-week { margin-bottom: 6px; }
+.cal-week span { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cal-week .we { color: var(--wood); }
+.cal-d { aspect-ratio: 1; min-height: 38px; border-radius: 12px; border: 0; padding: 0; display: grid; place-items: center; background: var(--bg-alt); color: var(--text); font: 600 15px Manrope, sans-serif; position: relative; transition: transform .2s var(--ease), box-shadow .2s var(--ease), background .2s; }
+button.cal-d { cursor: pointer; }
+button.cal-d:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--green-500); }
+.cal-pad { background: none; }
+.cal-d.is-past { opacity: .38; }
+.cal-d.is-today::after { content: ""; position: absolute; inset: -3px; border-radius: 14px; border: 2px solid var(--wood); pointer-events: none; }
+.cal-d.b-cottage, .sw-cottage { background: var(--cottage); color: #fff; }
+.cal-d.b-hall, .sw-hall { background: var(--hall); color: var(--hall-ink); }
+.cal-d.b-both, .sw-both { background: linear-gradient(135deg, var(--cottage) 0 50%, var(--hall) 50% 100%); color: #fff; }
+.cal-d.b-both span { text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+.cal-d[class*="b-"]:not(.is-past) { box-shadow: 0 6px 14px -8px rgba(31,58,36,.7); }
+.cal-d[class*="b-"]:not(.is-past)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 4px, transparent 4px 9px); pointer-events: none; }
+.cal-info { margin: 16px 0 0; min-height: 1.5em; text-align: center; font-size: 15px; font-weight: 600; color: var(--green-900); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: center; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { display: inline-block; width: 16px; height: 16px; border-radius: 5px; flex: none; }
+.sw-free { background: var(--bg-alt); border: 1px solid var(--line); }
+.cal-section .section-head p { max-width: 420px; }
+.cal-cta { display: flex; justify-content: center; margin-top: 20px; }
+.date-warn { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FFF1D6; color: #7A4F00; font-size: 14px; font-weight: 600; }
+@media (max-width: 760px) {
+  .cal-months > .cal-m:nth-child(n+2) { display: none; }
+  .cal-months { grid-template-columns: 1fr; }
+  .cal-g { gap: 5px; }
+  .cal-d { border-radius: 10px; font-size: 14px; }
+}
+
+/* ===== редактор дат (админка и Telegram) ===== */
+.de { display: grid; gap: 14px; }
+.de.is-busy { cursor: progress; }
+.de.is-busy .de-cal { opacity: .7; pointer-events: none; }
+.de-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: clamp(14px, 3vw, 22px); display: grid; gap: 12px; }
+.de-step { margin: 0; font-size: 14px; font-weight: 700; color: var(--green-900); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--bg-alt); padding: 4px; border-radius: 14px; }
+.seg button { border: 0; background: none; border-radius: 11px; min-height: 44px; padding: 6px 8px; font: 600 14px Manrope, sans-serif; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.seg button[aria-checked="true"] { background: #fff; color: var(--green-900); box-shadow: 0 1px 6px rgba(0,0,0,.1); }
+.de-type input { font: 400 16px Manrope, sans-serif; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; width: 100%; background: #fff; color: var(--text); }
+.de-type input:focus { border-color: var(--green-500); outline: none; }
+.de-hint { margin: -4px 0 0; font-size: 13px; color: var(--muted); }
+.de-preview { margin: 0; font-size: 14px; color: var(--green-900); min-height: 1em; }
+.de-preview span { color: var(--muted); }
+.de-preview .de-err { display: block; color: #9A3A28; font-weight: 600; margin-top: 4px; }
+.de-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.de-list { display: grid; gap: 8px; }
+.de-list .empty { padding: 16px 0; }
+.de-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-alt); border-radius: 12px; font-size: 15px; }
+.de-row span { flex: 1; }
+.de-row .btn-danger { padding: 6px 12px; font-size: 13px; }
+.de .cal-months > .cal-m:nth-child(n+2) { display: block; }
+@media (max-width: 760px) { .de .cal-months > .cal-m:nth-child(n+2) { display: none; } .seg button { flex-direction: column; gap: 4px; font-size: 13px; } }
+.hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

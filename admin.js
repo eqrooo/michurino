@@ -15,8 +15,8 @@
     const { data: isAdmin } = await sb.rpc('is_admin');
     if (!isAdmin) return show('noaccess');
     show('panel');
-    loadBookings(); loadPosts(); loadAccess();
-    if (location.hash === '#access') document.querySelector('[data-tab="access"]').click();
+    loadBookings(); loadPosts(); loadAccess(); mountDates();
+    const h = location.hash.slice(1); if (h === 'access' || h === 'dates') document.querySelector(`[data-tab="${h}"]`).click();
   }
   // вкладки «Вход / Регистрация»
   document.querySelectorAll('[data-auth]').forEach((b) => b.addEventListener('click', () => {
@@ -84,6 +84,7 @@
     if (error) { m.textContent = 'Ошибка, попробуйте позже'; return; }
     if (data === 'already_admin') return boot();
     if (data === 'too_soon') { if (!silent) m.textContent = 'Запрос уже отправлен недавно — дождитесь подтверждения.'; return; }
+    if (data === 'too_many') { m.textContent = 'Сейчас слишком много запросов. Попробуйте через час.'; return; }
     const { data: r } = await sb.functions.invoke('notify-admin');
     m.textContent = r && r.sent ? '✅ Запрос отправлен владельцу. Когда он подтвердит — нажмите «Проверить».'
       : '✅ Запрос сохранён — владелец увидит его в админке. Когда подтвердит — нажмите «Проверить».';
@@ -153,7 +154,39 @@
     document.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== b.dataset.tab; });
     if (b.dataset.tab === 'stats') loadStats();
     if (b.dataset.tab === 'access') loadAccess();
+    if (b.dataset.tab === 'dates') mountDates();
   }));
+
+  // ---------- занятые даты ----------
+  let datesUi = null;
+  const datesRows = async () => {
+    const { data, error } = await sb.from('booked_dates').select('day,object').gte('day', MCal.addDays(MCal.todayIso(), -62)).order('day').limit(3000);
+    if (error) throw error; return data;
+  };
+  const datesApi = {
+    load: datesRows,
+    add: async (days, objs) => {
+      const rows = days.flatMap((day) => objs.map((object) => ({ day, object })));
+      for (let i = 0; i < rows.length; i += 500) { const { error } = await sb.from('booked_dates').upsert(rows.slice(i, i + 500), { onConflict: 'day,object', ignoreDuplicates: true }); if (error) throw error; }
+      return datesRows();
+    },
+    remove: async (days, objs) => {
+      for (let i = 0; i < days.length; i += 200) { const { error } = await sb.from('booked_dates').delete().in('day', days.slice(i, i + 200)).in('object', objs); if (error) throw error; }
+      return datesRows();
+    },
+    toast,
+  };
+  function mountDates() { if (!datesUi) datesUi = MDates.mount($('dates-editor'), datesApi); else datesUi.reload(); }
+  // подтвердили заявку → предлагаем сразу занять её даты в календаре
+  async function offerDates(b) {
+    const objs = b.object === 'complex' ? ['cottage', 'hall'] : b.object === 'cottage' || b.object === 'hall' ? [b.object] : null;
+    if (!objs) return;
+    const days = [b.date_in];
+    if (b.date_out && b.date_out > b.date_in) for (let d = MCal.addDays(b.date_in, 1); d < b.date_out; d = MCal.addDays(d, 1)) days.push(d);
+    const what = objs.map((o) => MCal.OBJ[o]).join(' и ');
+    if (!confirm(`Отметить в календаре занятыми: ${what}, ${MCal.ranges(days).map(MCal.rangeText).join(', ')}?`)) return;
+    try { await datesApi.add(days, objs); toast('Даты отмечены в календаре'); if (datesUi) datesUi.reload(); } catch (_) { toast('Даты не сохранились'); }
+  }
 
   // ---------- заявки ----------
   let filter = 'active';
@@ -189,7 +222,9 @@
     }).join('');
     box.querySelectorAll('select').forEach((s) => s.addEventListener('change', async () => {
       const { error } = await sb.from('bookings').update({ status: s.value }).eq('id', s.dataset.id);
-      toast(error ? 'Не сохранилось' : 'Статус обновлён'); loadBookings();
+      toast(error ? 'Не сохранилось' : 'Статус обновлён');
+      if (!error && s.value === 'confirmed') await offerDates(data.find((x) => String(x.id) === s.dataset.id));
+      loadBookings();
     }));
   }
 

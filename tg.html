@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Занятые даты — Мичурино</title>
+  <link rel="icon" href="assets/logo.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    body.tgapp { background: var(--bg-alt); min-height: 100vh; }
+    .tg-wrap { width: min(760px, 100% - 24px); margin: 0 auto; padding: 14px 0 40px; }
+    .tg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .tg-head h1 { font-size: 30px; margin: 0; }
+    .tg-head a { font-size: 14px; font-weight: 600; color: var(--green-700); text-decoration: none; white-space: nowrap; }
+    .tg-msg { text-align: center; padding: 60px 16px; }
+    .tg-msg h2 { font-size: 30px; }
+  </style>
+</head>
+<body class="tgapp">
+  <div class="tg-wrap">
+    <header class="tg-head">
+      <h1>Занятые даты</h1>
+      <a href="admin.html" id="full">Вся админка →</a>
+    </header>
+    <div id="app" class="de"></div>
+    <div id="msg" class="tg-msg" hidden></div>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="vendor/supabase-2.117.3.js"></script>
+  <script src="config.js"></script>
+  <script src="calendar.js"></script>
+  <script src="dates-editor.js"></script>
+  <script>
+    (() => {
+      const W = window.Telegram && Telegram.WebApp;
+      const $ = (id) => document.getElementById(id);
+      const toast = (m) => { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => (t.hidden = true), 2500); try { W.HapticFeedback.notificationOccurred('success'); } catch (_) {} };
+      const stop = (title, text) => { $('app').hidden = true; $('msg').hidden = false; $('msg').innerHTML = `<h2>${title}</h2><p class="muted">${text}</p>`; };
+      if (!W || !W.initData) return stop('Откройте через бота', 'Эта страница работает только внутри Telegram: кнопка «Даты» в боте Мичурино.');
+      W.ready(); W.expand();
+      try { W.setHeaderColor('#F3F5EE'); W.setBackgroundColor('#F3F5EE'); } catch (_) {}
+      $('full').addEventListener('click', (e) => { e.preventDefault(); location.href = 'admin.html'; });
+
+      const call = async (action, extra = {}) => {
+        const r = await fetch(SB_URL + '/functions/v1/tg-dates', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+          body: JSON.stringify({ initData: W.initData, action, ...extra }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (r.status === 403) { stop('Нет доступа', 'Этот Telegram не подключён к админке. Откройте админку на сайте → «Доступ» → «Подключить Telegram».'); throw new Error('forbidden'); }
+        if (r.status === 401) { stop('Не удалось проверить вход', 'Закройте окно и откройте его заново из бота.'); throw new Error('signature'); }
+        if (!r.ok || !data.rows) throw new Error(data.error || 'failed');
+        return data.rows;
+      };
+      MDates.mount($('app'), {
+        load: () => call('list'),
+        add: (days, objects) => call('add', { days, objects }),
+        remove: (days, objects) => call('remove', { days, objects }),
+        toast,
+      });
+    })();
+  </script>
+</body>
+</html>

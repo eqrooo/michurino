@@ -58,6 +58,7 @@
       <a class="brand" href="./"><img src="assets/logo.svg" alt="" width="54" height="29"><span><b>Мичурино</b><small>админка</small></span></a>
       <nav class="tabs" role="tablist">
         <button role="tab" data-tab="bookings" aria-selected="true">Заявки <span id="new-count" class="badge" hidden></span></button>
+        <button role="tab" data-tab="dates">Даты</button>
         <button role="tab" data-tab="posts">Посты</button>
         <button role="tab" data-tab="stats">Посещения</button>
         <button role="tab" data-tab="access">Доступ <span id="req-count" class="badge" hidden></span></button>
@@ -72,6 +73,12 @@
           <button class="chip" data-filter="all">Все</button>
         </div>
         <div id="bookings-list" class="list"></div>
+      </section>
+
+      <section data-panel="dates" hidden>
+        <h2 class="panel-title">Забронированные даты</h2>
+        <p class="muted panel-sub">Отмеченные дни сразу видны гостям в календаре на сайте.</p>
+        <div id="dates-editor" class="de"></div>
       </section>
 
       <section data-panel="posts" hidden>
@@ -109,15 +116,17 @@
         <div id="req-list" class="list"></div>
         <h3 class="sub">Администраторы</h3>
         <div id="admin-list" class="list"></div>
-        <p class="muted small">Как добавить человека: он открывает админку, жмёт «Первый раз? Создать вход», подтверждает почту, входит и нажимает «Запросить доступ». Вам придёт письмо — подтвердите здесь.</p>
+        <p class="muted small">Как добавить человека: он открывает админку, во вкладке «Регистрация» создаёт аккаунт — вам в Telegram сразу придёт запрос с кнопками «Подтвердить / Отклонить». Подтвердить можно и здесь.</p>
       </section>
     </main>
   </div>
 
   <div class="toast" id="toast" role="status" hidden></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+  <script src="vendor/supabase-2.117.3.js"></script>
   <script src="config.js"></script>
+  <script src="calendar.js"></script>
+  <script src="dates-editor.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

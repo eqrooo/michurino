@@ -1,9 +1,15 @@
 name: Не даём базе уснуть
 
+# Раз в 2 дня: будим базу Supabase, проверяем сайт и срок домена.
+# Если что-то сломалось — GitHub пришлёт письмо владельцу репозитория.
 on:
   schedule:
-    - cron: "17 3 */2 * *"   # раз в 2 дня
+    - cron: "17 3 */2 * *"
   workflow_dispatch:
+
+permissions:
+  actions: write   # чтобы продлевать самому себе расписание
+  contents: read
 
 jobs:
   ping:
@@ -11,8 +17,31 @@ jobs:
     steps:
       - name: Запрос к базе Supabase
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
+          code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 20 \
             "https://suerxffntlexrhqujywj.supabase.co/rest/v1/posts?select=id&limit=1" \
             -H "apikey: sb_publishable_Z7Gm09dDO0p9axAe7FGf7Q_SytsGapA")
           echo "Ответ базы: $code"
           test "$code" = "200"
+
+      - name: Не даём GitHub отключить расписание (он выключает его через 60 дней тишины)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/keep-alive.yml/enable"
+
+      - name: Сайт открывается
+        if: always()
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 20 https://michurino.asia/)
+          echo "Ответ сайта: $code"
+          test "$code" = "200"
+
+      - name: Домен не истекает в ближайший месяц
+        if: always()
+        run: |
+          exp=$(curl -s --retry 3 https://rdap.identitydigital.services/rdap/domain/michurino.asia \
+            | python3 -c "import json,sys;print(next(e['eventDate'] for e in json.load(sys.stdin)['events'] if e['eventAction']=='expiration'))" || true)
+          if [ -z "$exp" ]; then echo "Не удалось узнать срок домена — пропускаю"; exit 0; fi
+          left=$(( ( $(date -d "$exp" +%s) - $(date +%s) ) / 86400 ))
+          echo "Домен michurino.asia оплачен до $exp (осталось дней: $left)"
+          if [ "$left" -lt 30 ]; then echo "::error::Домен скоро истечёт! Продлите michurino.asia на ps.kz"; exit 1; fi

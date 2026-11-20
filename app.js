@@ -179,9 +179,46 @@
     });
   }
 
-  // ---------- форма брони ----------
+  // ---------- календарь занятых дат ----------
+  let booked = new Map();
   const form = $('booking-form');
+  if ($('pub-cal') && window.sb && window.MCal) {
+    const cal = MCal.mount($('pub-cal'), {
+      months: 2, interactive: 'free', maxMonths: 14,
+      onDay: (day, set) => {
+        if (!form) return;
+        if (MCal.kind(set) === 'both') return;
+        const v = form.object.value;
+        // если выбранный объект в этот день занят — предложим свободный
+        if (set && set.has(v === 'complex' ? 'cottage' : v)) pick(set.has('cottage') ? 'hall' : 'cottage');
+        form.date_in.value = day;
+        if ((form.object.value === 'cottage' || form.object.value === 'complex') && (!form.date_out.value || form.date_out.value <= day)) form.date_out.value = MCal.addDays(day, 1);
+        checkDates();
+        $('booking').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      },
+    });
+    const today = MCal.todayIso();
+    sb.from('booked_dates').select('day,object').gte('day', MCal.addDays(today, -31)).lte('day', MCal.addDays(today, 460)).then(({ data, error }) => {
+      if (error) { $('cal-note').textContent = 'Календарь временно не загрузился — свободные даты уточняйте по телефону ' + C.phone; $('cal-note').hidden = false; return; }
+      booked = MCal.toMap(data); cal.set(booked); checkDates();
+    });
+  }
+
+  // ---------- форма брони ----------
   if (!form) return;
+  // предупреждаем, если выбранные даты уже заняты (отправить заявку всё равно можно)
+  function checkDates() {
+    const w = $('date-warn'); if (!w || !form.date_in.value) { if (w) w.hidden = true; return; }
+    const v = form.object.value, objs = v === 'complex' ? ['cottage', 'hall'] : v === 'cottage' || v === 'hall' ? [v] : [];
+    const days = [form.date_in.value];
+    if ((v === 'cottage' || v === 'complex') && form.date_out.value > form.date_in.value) {
+      for (let d = MCal.addDays(form.date_in.value, 1), n = 0; d < form.date_out.value && n < 60; d = MCal.addDays(d, 1), n++) days.push(d);
+    }
+    const busy = days.filter((d) => objs.some((o) => booked.get(d) && booked.get(d).has(o)));
+    w.hidden = !busy.length;
+    if (busy.length) w.textContent = `⚠️ ${busy.length === 1 ? MCal.human(busy[0]) + ' уже занято' : 'Часть дат уже занята: ' + MCal.ranges(busy).map(MCal.rangeText).join(', ')}. Выберите другие даты или позвоните — подскажем.`;
+  }
+  ['date_in', 'date_out', 'object'].forEach((n) => form[n].addEventListener('change', checkDates));
   const today = new Date().toISOString().slice(0, 10);
   form.date_in.min = today; form.date_out.min = today;
   const syncObject = () => {
@@ -211,6 +248,7 @@
     if (v === 'banya' && !(hours >= 3)) return bad(form.hours, 'Баня бронируется минимум на 3 часа');
     const btn = form.querySelector('button[type=submit]');
     btn.disabled = true; btn.textContent = 'Отправляем…';
+    if (form.website && form.website.value) { $('form-ok').textContent = C.booking.success; $('form-ok').hidden = false; btn.textContent = 'Заявка отправлена'; return; } // бот
     const { error } = await sb.from('bookings').insert({
       object: v,
       name: form.name.value.trim().slice(0, 100),
@@ -223,7 +261,10 @@
     });
     if (error) {
       btn.disabled = false; btn.textContent = 'Отправить заявку';
-      err.textContent = 'Не получилось отправить. Позвоните нам: ' + C.phone;
+      const m = String(error.message || '');
+      err.textContent = m.includes('rate_limited') ? 'Слишком много заявок подряд. Подождите немного или позвоните нам: ' + C.phone
+        : m.includes('bad_date') ? 'Проверьте даты — похоже, они в прошлом или слишком далеко'
+        : 'Не получилось отправить. Позвоните нам: ' + C.phone;
       return;
     }
     const ok = $('form-ok'); ok.textContent = C.booking.success; ok.hidden = false;

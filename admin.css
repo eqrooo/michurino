@@ -82,3 +82,6 @@
 .hint { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
 .hint.top { text-align: left; background: var(--green-100); color: var(--green-900); padding: 10px 12px; border-radius: 10px; }
 .form label small { font-weight: 400; color: var(--muted); }
+.panel-title { font-size: 32px; margin: 0 0 4px; }
+.panel-sub { margin: 0 0 16px; }
+@media (max-width: 640px) { .tabs { overflow-x: auto; scrollbar-width: none; } .tabs button { flex: 1 0 auto; padding: 9px 7px; font-size: 13px; } }

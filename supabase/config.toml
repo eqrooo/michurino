@@ -19,3 +19,6 @@ verify_jwt = true
 
 [functions.notify-admin]
 verify_jwt = true
+
+[functions.tg-dates]
+verify_jwt = false   # Telegram-мини-приложение, защита — подпись Telegram (initData) + проверка админа

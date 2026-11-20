@@ -20,6 +20,7 @@
       <a href="complex.html">О комплексе</a>
       <a href="#prices">Цены</a>
       <a href="#gallery">Фото</a>
+      <a href="#dates">Свободные даты</a>
       <a href="#news">Новости</a>
       <a href="#map">Как добраться</a>
     </nav>
@@ -78,6 +79,20 @@
       </div>
     </section>
 
+    <section class="section cal-section" id="dates">
+      <div class="container">
+        <div class="section-head reveal">
+          <div><p class="eyebrow">Календарь</p><h2>Забронированные даты</h2></div>
+          <p class="muted">Цветом отмечены занятые дни. Нажмите на свободный день — он подставится в заявку.</p>
+        </div>
+        <div class="cal-card reveal">
+          <div id="pub-cal"></div>
+          <div class="cal-legend" aria-hidden="true"><span><i class="sw sw-cottage"></i>Коттедж занят</span><span><i class="sw sw-hall"></i>Банкетный зал занят</span><span><i class="sw sw-both"></i>Заняты оба</span><span><i class="sw sw-free"></i>Свободно</span></div>
+        </div>
+        <p class="muted cal-note" id="cal-note" hidden></p>
+      </div>
+    </section>
+
     <section class="section booking-wrap" id="booking">
       <div class="container two">
         <div class="reveal">
@@ -103,7 +118,9 @@
             <label id="row-out">Выезд<input name="date_out" type="date"></label>
             <label id="row-hours" hidden>Сколько часов<input name="hours" type="number" min="3" max="24" value="3"></label>
           </div>
+          <p class="date-warn" id="date-warn" role="status" hidden></p>
           <label>Сколько гостей<input name="guests" type="number" min="1" max="150" value="2"></label>
+          <label class="hp" aria-hidden="true">Сайт<input name="website" tabindex="-1" autocomplete="off"></label>
           <label>Комментарий<textarea name="comment" rows="3" placeholder="Пожелания, вопросы"></textarea></label>
           <p class="form-error" id="form-error" role="alert"></p>
           <button class="btn btn-full" type="submit">Отправить заявку</button>
@@ -140,9 +157,10 @@
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+  <script src="vendor/supabase-2.117.3.js"></script>
   <script src="config.js"></script>
   <script src="content.js"></script>
+  <script src="calendar.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
