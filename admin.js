@@ -209,12 +209,13 @@
       const wa = phone.replace(/\D/g, '').replace(/^8/, '7');
       return `<article class="card bk">
         <div><h3>${esc(b.name)}</h3>
-          <div class="meta"><span class="obj-tag">${OBJ[b.object] || ''}</span> <span class="dates">${b.date_out ? `${d(b.date_in)} — ${d(b.date_out)}` : d(b.date_in)}${b.hours ? ` · ${b.hours} ч` : ''}</span> · гостей: ${b.guests} · пришла ${dt(b.created_at)}</div></div>
+          <div class="meta"><span class="obj-tag">${OBJ[b.object] || ''}</span>${b.tg_user_id ? ' <span class="obj-tag tg-tag">Telegram</span>' : ''} <span class="dates">${b.date_out ? `${d(b.date_in)} 12:00 — ${d(b.date_out)} 12:00` : d(b.date_in)}${b.hours ? ` · ${b.hours} ч` : ''}</span> · гостей: ${b.guests} · пришла ${dt(b.created_at)}</div></div>
         <span class="status st-${b.status}">${STATUS[b.status]}</span>
         ${b.comment ? `<p class="comment">${esc(b.comment)}</p>` : ''}
         <div class="actions">
           <a class="btn btn-small" href="tel:${esc(phone)}">Позвонить ${esc(b.phone)}</a>
           <a class="btn btn-small btn-ghost" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>
+          ${b.tg_username ? `<a class="btn btn-small btn-ghost" href="https://t.me/${esc(b.tg_username)}" target="_blank" rel="noopener">Telegram</a>` : ''}
           <select data-id="${b.id}" aria-label="Статус заявки">
             ${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === b.status ? 'selected' : ''}>${v}</option>`).join('')}
           </select>
@@ -222,7 +223,8 @@
     }).join('');
     box.querySelectorAll('select').forEach((s) => s.addEventListener('change', async () => {
       const { error } = await sb.from('bookings').update({ status: s.value }).eq('id', s.dataset.id);
-      toast(error ? 'Не сохранилось' : 'Статус обновлён');
+      const bk = data.find((x) => String(x.id) === s.dataset.id);
+      toast(error ? 'Не сохранилось' : bk && bk.tg_user_id && ['confirmed', 'cancelled'].includes(s.value) ? 'Статус обновлён — гостю ушло сообщение в Telegram' : 'Статус обновлён');
       if (!error && s.value === 'confirmed') await offerDates(data.find((x) => String(x.id) === s.dataset.id));
       loadBookings();
     }));

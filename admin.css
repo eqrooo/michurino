@@ -85,3 +85,4 @@
 .panel-title { font-size: 32px; margin: 0 0 4px; }
 .panel-sub { margin: 0 0 16px; }
 @media (max-width: 640px) { .tabs { overflow-x: auto; scrollbar-width: none; } .tabs button { flex: 1 0 auto; padding: 9px 7px; font-size: 13px; } }
+.tg-tag { background: #E3F4FD; color: #126A99; }

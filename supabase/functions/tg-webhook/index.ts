@@ -4,6 +4,14 @@ import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 // Сюда Telegram присылает сообщения и нажатия кнопок. Проверяем секретный заголовок.
 const ADMIN_URL = "https://michurino.asia/admin.html";
 const DATES_URL = "https://michurino.asia/tg.html";
+const BOOK_URL = "https://michurino.asia/book.html";
+const GUEST_TEXT = "Здравствуйте! 👋 Это бот комплекса отдыха <b>«Мичурино»</b> 🌲\n\nЗдесь можно посмотреть свободные даты и оставить заявку онлайн:\n🏡 коттедж — посуточно, с 12:00 до 12:00\n🎉 банкетный зал — до 70 гостей\n🧖 баня — от 3 часов\n\nНажмите «📅 Забронировать онлайн» 👇\nТелефон: +7 (775) 454-26-00";
+const ADMIN_COMMANDS = [
+  { command: "dates", description: "Занятые даты (календарь)" },
+  { command: "book", description: "Забронировать (как гость)" },
+  { command: "admin", description: "Открыть админку" },
+  { command: "stop", description: "Отключить уведомления" },
+];
 const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
 async function secretFor(token: string) {
   const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("michurino:" + token));
@@ -79,25 +87,31 @@ Deno.serve(async (req) => {
       const r = await tg("sendMessage", { chat_id: chatId, text, parse_mode: "HTML", ...(withBtn ? { reply_markup: adminBtn } : {}) });
       if (!r.ok) console.error("telegram send error", r.description);
     };
+    // гостям: приветствие и кнопка мини-приложения бронирования
+    const guest = async () => {
+      const r = await tg("sendMessage", { chat_id: chatId, text: GUEST_TEXT, parse_mode: "HTML", reply_markup: { inline_keyboard: [
+        ...(chatId > 0 ? [[{ text: "📅 Забронировать онлайн", web_app: { url: BOOK_URL } }]] : []),
+        [{ text: "🌐 Сайт и фото", url: "https://michurino.asia/" }],
+      ] } });
+      if (!r.ok) console.error("telegram guest error", r.description);
+    };
     // кнопка «Админка» слева от поля ввода, команды и приём нажатий кнопок
     const setup = () => Promise.all([
       tg("setChatMenuButton", { chat_id: chatId, menu_button: chatId > 0 ? { type: "web_app", text: "Даты", web_app: { url: DATES_URL } } : { type: "commands" } }),
-      tg("setMyCommands", { commands: [
-        { command: "dates", description: "Занятые даты (календарь)" },
-        { command: "admin", description: "Открыть админку" },
-        { command: "stop", description: "Отключить уведомления" },
-      ] }),
+      tg("setMyCommands", { commands: ADMIN_COMMANDS, scope: { type: "chat", chat_id: chatId } }),
       tg("setWebhook", { url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/tg-webhook`, secret_token: secret, allowed_updates: ["message", "callback_query"] }),
     ]);
 
     const text = msg.text.trim();
     const { data: linked } = await db.from("tg_chats").select("chat_id").eq("chat_id", chatId).maybeSingle();
 
-    if (text.startsWith("/start")) {
+    if (text.startsWith("/book")) {
+      await guest();
+    } else if (text.startsWith("/start")) {
       const code = text.split(/\s+/)[1] ?? "";
       if (!/^[a-f0-9]{24}$/.test(code)) {
-        if (linked) { await setup(); await send("Уведомления уже включены ✅"); }
-        else await send("Привет! Это бот уведомлений комплекса Мичурино. Подключить уведомления можно в админке: вкладка «Доступ» → «Подключить Telegram».");
+        if (linked && code !== "book") { await setup(); await send("Уведомления уже включены ✅"); }
+        else await guest();
         return new Response("ok");
       }
       const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
@@ -111,15 +125,22 @@ Deno.serve(async (req) => {
       if (e2) console.error("save chat", e2);
       await setup();
       await send("✅ <b>Готово!</b> Сюда будут приходить новые заявки с сайта и запросы доступа к админке (их можно подтверждать прямо здесь).\n\n📅 Занятые даты — кнопка «Даты» слева от поля ввода или команда /dates.\nВся админка — /admin. Отключить уведомления — /stop");
-    } else if (text.startsWith("/stop")) {
+    } else if (linked && text.startsWith("/stop")) {
       await db.from("tg_chats").delete().eq("chat_id", chatId);
-      await send("Уведомления отключены. Чтобы включить снова — нажмите «Подключить Telegram» в админке.");
+      // вернуть гостевое меню и команды
+      await Promise.all([
+        tg("setChatMenuButton", { chat_id: chatId, menu_button: chatId > 0 ? { type: "web_app", text: "Забронировать", web_app: { url: BOOK_URL } } : { type: "default" } }),
+        tg("deleteMyCommands", { scope: { type: "chat", chat_id: chatId } }),
+      ]);
+      await send("Уведомления отключены. Чтобы включить снова — нажмите «Подключить Telegram» в админке.", false);
     } else if (linked && text.startsWith("/dates")) {
       await setup();
       await send("📅 Отметьте занятые даты — гости сразу увидят их на сайте:");
     } else if (linked) {
       await setup();
       await send("📒 Админка Мичурино:");
+    } else {
+      await guest();
     }
   } catch (e) {
     console.error("handler error", e);

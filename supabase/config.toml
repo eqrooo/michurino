@@ -22,3 +22,6 @@ verify_jwt = true
 
 [functions.tg-dates]
 verify_jwt = false   # Telegram-мини-приложение, защита — подпись Telegram (initData) + проверка админа
+
+[functions.tg-guest]
+verify_jwt = false   # мини-приложение гостей (подпись Telegram initData) + событие смены статуса от базы

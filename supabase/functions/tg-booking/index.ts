@@ -22,7 +22,8 @@ Deno.serve(async (req) => {
   if (!chats?.length) return new Response("no chats", { status: 200 });
 
   const phoneDigits = String(b.phone).replace(/\D/g, "").replace(/^8(\d{10})$/, "7$1");
-  const when = b.date_out ? `${d(b.date_in)} → ${d(b.date_out)}` : d(b.date_in);
+  const nights = b.date_out ? Math.round((Date.parse(b.date_out) - Date.parse(b.date_in)) / 86400_000) : 0;
+  const when = b.date_out ? `${d(b.date_in)}, 12:00 → ${d(b.date_out)}, 12:00 (суток: ${nights})` : d(b.date_in);
   const text = [
     `<b>🔔 Новая заявка!</b>`,
     ``,
@@ -32,9 +33,11 @@ Deno.serve(async (req) => {
     `👤 ${esc(b.name)}`,
     `📞 ${esc(b.phone)}`,
     b.comment ? `💬 ${esc(b.comment)}` : null,
+    b.tg_user_id ? `✈️ Заявка из Telegram${b.tg_username ? ` (@${esc(b.tg_username)})` : ""} — когда смените статус на «Подтверждена» или «Отменена», гостю придёт сообщение` : null,
   ].filter((x) => x !== null).join("\n");
   const row = [{ text: "📒 Открыть админку", url: "https://michurino.asia/admin.html" }];
   if (phoneDigits.length >= 10) row.unshift({ text: "💬 WhatsApp", url: `https://wa.me/${phoneDigits}` });
+  if (b.tg_username) row.unshift({ text: "✈️ Telegram", url: `https://t.me/${b.tg_username}` });
   const datesRow = [{ text: "📅 Отметить даты", web_app: { url: "https://michurino.asia/tg.html" } }];
 
   const sendTo = async (chat_id: number) => {

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Бронирование — Мичурино</title>
+  <meta name="description" content="Онлайн-бронирование комплекса «Мичурино» в Telegram: свободные даты, коттедж, банкетный зал, баня.">
+  <link rel="icon" href="assets/logo.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body.bookapp { background: var(--bg-alt); min-height: 100vh; }
+    .bk-wrap { width: min(640px, 100% - 24px); margin: 0 auto; padding: 14px 0 48px; display: grid; gap: 14px; }
+    .bk-head { display: flex; align-items: center; gap: 10px; }
+    .bk-head h1 { font-size: 30px; margin: 0; }
+    .bk-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: clamp(14px, 4vw, 22px); }
+    .bk-card > h2 { font-size: 26px; margin: 0 0 4px; }
+    .bk-card > .muted { font-size: 14px; margin-bottom: 12px; }
+    .bk-card .form { padding: 0; background: none; }
+    .bk-estimate { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--green-100); color: var(--green-900); font-size: 14px; font-weight: 600; }
+    .bk-phone-row { display: flex; gap: 8px; align-items: end; }
+    .bk-phone-row label { flex: 1; }
+    .bk-tg-phone { white-space: nowrap; min-height: 48px; }
+    .bk-mine { display: grid; gap: 8px; }
+    .bk-item { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 12px 14px; background: var(--bg-alt); border-radius: 12px; font-size: 14.5px; }
+    .bk-item b { font-size: 15px; }
+    .bk-item span:last-child { grid-column: 1; color: var(--muted); }
+    .bk-st { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
+    .st-new { background: #FFF1D6; color: #8A5A00; } .st-confirmed { background: var(--green-100); color: var(--green-900); }
+    .st-done { background: #ECEEEC; color: #5B665A; } .st-cancelled { background: #F8E3DF; color: #9A3A28; }
+    .bk-done { text-align: center; padding: 28px 16px; }
+    .bk-done .big { font-size: 46px; line-height: 1; }
+    .bk-done h2 { margin: 10px 0 6px; }
+    .bk-msg { text-align: center; padding: 60px 16px; }
+    .bk-foot { text-align: center; font-size: 13.5px; color: var(--muted); }
+    .bk-foot a { color: var(--green-700); font-weight: 600; }
+  </style>
+</head>
+<body class="bookapp">
+  <div class="bk-wrap" id="wrap">
+    <header class="bk-head">
+      <img src="assets/logo.svg" alt="" width="54" height="29">
+      <h1>Бронирование</h1>
+    </header>
+
+    <section class="bk-card">
+      <h2>Свободные даты</h2>
+      <p class="muted">Цветом отмечены занятые дни. Нажмите на свободный — он подставится в заявку.</p>
+      <div id="cal"></div>
+      <div class="cal-legend" aria-hidden="true"><span><i class="sw sw-cottage"></i>Коттедж</span><span><i class="sw sw-hall"></i>Зал</span><span><i class="sw sw-both"></i>Оба</span><span><i class="sw sw-free"></i>Свободно</span></div>
+    </section>
+
+    <section class="bk-card" id="form-card">
+      <h2>Заявка</h2>
+      <p class="muted">Хозяин перезвонит и подтвердит бронь — сообщение придёт сюда, в Telegram.</p>
+      <form class="form" id="f" novalidate>
+        <label>Что бронируете
+          <select name="object">
+            <option value="cottage">Коттедж (проживание)</option>
+            <option value="hall">Банкетный зал (торжество)</option>
+            <option value="banya">Баня</option>
+            <option value="complex">Весь комплекс</option>
+          </select>
+        </label>
+        <div class="row">
+          <label><span id="lbl-in">Заезд (в 12:00)</span><input name="date_in" type="date" required></label>
+          <label id="row-out">Выезд (в 12:00)<input name="date_out" type="date"></label>
+          <label id="row-hours" hidden>Сколько часов<input name="hours" type="number" min="3" max="24" value="3" inputmode="numeric"></label>
+        </div>
+        <p class="stay-hint" id="stay-hint">🕛 Коттедж сдаётся посуточно: заезд в 12:00, выезд в 12:00 следующего дня.</p>
+        <p class="date-warn" id="warn" hidden></p>
+        <p class="bk-estimate" id="est" hidden></p>
+        <label>Сколько гостей<input name="guests" type="number" min="1" max="150" value="2" inputmode="numeric"></label>
+        <label>Ваше имя<input name="name" required autocomplete="name" maxlength="100"></label>
+        <div class="bk-phone-row">
+          <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 (___) ___-__-__" maxlength="30"></label>
+          <button type="button" class="btn btn-small btn-ghost bk-tg-phone" id="tg-phone" hidden>📱 Из Telegram</button>
+        </div>
+        <label>Комментарий<textarea name="comment" rows="3" maxlength="1000" placeholder="Пожелания, вопросы"></textarea></label>
+        <p class="form-error" id="err" role="alert"></p>
+        <button class="btn btn-full" type="submit">Отправить заявку</button>
+      </form>
+    </section>
+
+    <section class="bk-card" id="mine-card" hidden>
+      <h2>Мои заявки</h2>
+      <div class="bk-mine" id="mine"></div>
+    </section>
+
+    <p class="bk-foot">Вопросы: <a id="phone"></a> · <a href="index.html" id="site">Сайт и фото</a></p>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <style>.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--green-900); color: #fff; padding: 12px 20px; border-radius: 999px; font-weight: 600; box-shadow: 0 10px 30px -10px rgba(0,0,0,.4); z-index: 50; }</style>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="vendor/supabase-2.117.3.js"></script>
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="calendar.js"></script>
+  <script src="book.js"></script>
+</body>
+</html>

@@ -26,6 +26,10 @@
 
   if ($('hero-img')) $('hero-img').src = C.heroPhoto;
 
+  // ---------- Telegram-бот (онлайн-бронь) ----------
+  document.querySelectorAll('[data-tg-book]').forEach((a) => { if (C.telegramBot) a.href = 'https://t.me/' + C.telegramBot + '?start=book'; else a.hidden = true; });
+  document.querySelectorAll('[data-tg-name]').forEach((a) => { a.textContent = '@' + C.telegramBot; });
+
   // ---------- иконки ----------
   const icons = {
     home: '<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -224,7 +228,8 @@
   const syncObject = () => {
     const v = form.object.value;
     const stay = v === 'cottage' || v === 'complex';
-    $('lbl-in').textContent = stay ? 'Заезд' : 'Дата';
+    $('lbl-in').textContent = stay ? 'Заезд (в 12:00)' : 'Дата';
+    if ($('stay-hint')) $('stay-hint').hidden = !stay;
     $('row-out').hidden = !stay;
     $('row-hours').hidden = v !== 'banya';
   };

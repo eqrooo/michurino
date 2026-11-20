@@ -302,3 +302,7 @@ button.cal-d:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--gr
 .de .cal-months > .cal-m:nth-child(n+2) { display: block; }
 @media (max-width: 760px) { .de .cal-months > .cal-m:nth-child(n+2) { display: none; } .seg button { flex-direction: column; gap: 4px; font-size: 13px; } }
 .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.stay-hint { margin: -4px 0 0; font-size: 13.5px; color: var(--muted); }
+.btn-tg { background: #2AABEE; border-color: #2AABEE; color: #fff; justify-content: center; }
+.btn-tg:hover { background: #1E96D4; border-color: #1E96D4; }
+.btn-tg svg { flex: none; }
