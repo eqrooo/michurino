@@ -94,7 +94,8 @@
   }
 
   function render(state) {
-    booked = MCal.toMap(state.rows || []); cal.set(booked);
+    $('cal-card').hidden = !state.showDates;
+    booked = MCal.toMap(state.showDates ? state.rows || [] : []); cal.set(booked);
     if (state.profile) { if (!f.name.value) f.name.value = state.profile.name || ''; if (!f.phone.value) f.phone.value = state.profile.phone || ''; }
     const mine = state.mine || [];
     $('mine-card').hidden = !mine.length;

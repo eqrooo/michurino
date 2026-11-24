@@ -20,7 +20,7 @@
       <a href="complex.html">О комплексе</a>
       <a href="#prices">Цены</a>
       <a href="#gallery">Фото</a>
-      <a href="#dates">Свободные даты</a>
+      <a href="#dates" id="nav-dates" hidden>Свободные даты</a>
       <a href="#news">Новости</a>
       <a href="#map">Как добраться</a>
     </nav>
@@ -79,7 +79,7 @@
       </div>
     </section>
 
-    <section class="section cal-section" id="dates">
+    <section class="section cal-section" id="dates" hidden>
       <div class="container">
         <div class="section-head reveal">
           <div><p class="eyebrow">Календарь</p><h2>Забронированные даты</h2></div>
@@ -101,7 +101,6 @@
           <p class="lead" data-c="booking.text"></p>
           <p class="contact-line">Или звоните: <a id="phone-link"></a></p>
           <p class="contact-line" id="wa-line"></p>
-          <p class="contact-line">Telegram: <a data-tg-book target="_blank" rel="noopener" data-tg-name></a> — свободные даты и бронь онлайн</p>
         </div>
         <form class="form reveal" id="booking-form" novalidate>
           <label>Ваше имя<input name="name" required autocomplete="name" placeholder="Айгерим"></label>
@@ -124,7 +123,6 @@
           <label>Сколько гостей<input name="guests" type="number" min="1" max="150" value="2"></label>
           <label class="hp" aria-hidden="true">Сайт<input name="website" tabindex="-1" autocomplete="off"></label>
           <label>Комментарий<textarea name="comment" rows="3" placeholder="Пожелания, вопросы"></textarea></label>
-          <a class="btn btn-tg btn-full" data-tg-book target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.8 19c-.2 1-.8 1.3-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L6.9 13 2.3 11.6c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3Z"/></svg> Забронировать онлайн в Telegram</a>
           <p class="form-error" id="form-error" role="alert"></p>
           <button class="btn btn-full" type="submit">Отправить заявку</button>
           <p class="form-ok" id="form-ok" role="status" hidden></p>
@@ -156,7 +154,6 @@
         <a id="phone-foot"></a>
         <span id="wa-foot" class="foot-links"></span>
         <a id="ig-foot" target="_blank" rel="noopener">Instagram</a>
-        <a data-tg-book target="_blank" rel="noopener">Telegram-бот</a>
       </div>
     </div>
   </footer>

@@ -81,13 +81,15 @@ Deno.serve(async (req) => {
   if (!u) return json({ error: "bad_signature" }, 401);
 
   const state = async () => {
-    const [{ data: profile }, { data: rows }, { data: mine }] = await Promise.all([
+    const [{ data: profile }, { data: rows }, { data: mine }, { data: st }] = await Promise.all([
       db.from("tg_guests").select("name, phone").eq("tg_user_id", u.id).maybeSingle(),
       db.from("booked_dates").select("day, object").gte("day", addDays(today(), -31)).order("day").limit(3000),
       db.from("bookings").select("id, created_at, object, date_in, date_out, hours, guests, status").eq("tg_user_id", u.id)
         .order("created_at", { ascending: false }).limit(10),
+      db.from("site_settings").select("value").eq("key", "show_dates").maybeSingle(),
     ]);
-    return { profile: profile ?? { name: [u.first_name, u.last_name].filter(Boolean).join(" ").slice(0, 100), phone: "" }, rows: rows ?? [], mine: mine ?? [] };
+    const showDates = st?.value === true; // админ включает в админке → вкладка «Даты»
+    return { profile: profile ?? { name: [u.first_name, u.last_name].filter(Boolean).join(" ").slice(0, 100), phone: "" }, rows: showDates ? rows ?? [] : [], showDates, mine: mine ?? [] };
   };
 
   try {

@@ -77,7 +77,12 @@
 
       <section data-panel="dates" hidden>
         <h2 class="panel-title">Забронированные даты</h2>
-        <p class="muted panel-sub">Отмеченные дни сразу видны гостям в календаре на сайте.</p>
+        <p class="muted panel-sub">Отмечайте занятые дни здесь. Гости увидят их, только если включить показ ниже.</p>
+        <label class="card toggle-card">
+          <span><b>Показывать занятые даты гостям</b><small id="show-dates-hint">Календарь на сайте и в Telegram-боте</small></span>
+          <input type="checkbox" id="show-dates" role="switch" disabled>
+          <i class="switch" aria-hidden="true"></i>
+        </label>
         <div id="dates-editor" class="de"></div>
       </section>
 

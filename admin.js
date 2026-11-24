@@ -176,7 +176,21 @@
     },
     toast,
   };
-  function mountDates() { if (!datesUi) datesUi = MDates.mount($('dates-editor'), datesApi); else datesUi.reload(); }
+  function mountDates() { if (!datesUi) datesUi = MDates.mount($('dates-editor'), datesApi); else datesUi.reload(); loadShowDates(); }
+  // переключатель «Показывать занятые даты гостям» (сайт + Telegram)
+  const showHint = (on) => { $('show-dates-hint').textContent = on ? 'Включено: гости видят календарь на сайте и в Telegram-боте' : 'Выключено: календаря на сайте и в боте нет'; };
+  async function loadShowDates() {
+    const { data } = await sb.from('site_settings').select('value').eq('key', 'show_dates').maybeSingle();
+    const on = !!(data && data.value === true);
+    $('show-dates').checked = on; $('show-dates').disabled = false; showHint(on);
+  }
+  $('show-dates').addEventListener('change', async (e) => {
+    const on = e.target.checked; e.target.disabled = true;
+    const { data, error } = await sb.from('site_settings').update({ value: on, updated_at: new Date().toISOString() }).eq('key', 'show_dates').select('value');
+    e.target.disabled = false;
+    if (error || !data || !data.length) { e.target.checked = !on; toast('Не сохранилось'); return; }
+    showHint(on); toast(on ? 'Даты теперь видны гостям' : 'Даты скрыты от гостей');
+  });
   // подтвердили заявку → предлагаем сразу занять её даты в календаре
   async function offerDates(b) {
     const objs = b.object === 'complex' ? ['cottage', 'hall'] : b.object === 'cottage' || b.object === 'hall' ? [b.object] : null;

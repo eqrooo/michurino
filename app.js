@@ -186,7 +186,10 @@
   // ---------- календарь занятых дат ----------
   let booked = new Map();
   const form = $('booking-form');
-  if ($('pub-cal') && window.sb && window.MCal) {
+  // календарь показывается, только если админ включил «Показывать занятые даты гостям»
+  if ($('pub-cal') && window.sb && window.MCal) sb.from('site_settings').select('value').eq('key', 'show_dates').maybeSingle().then(({ data: st }) => {
+    if (!st || st.value !== true) return;
+    $('dates').hidden = false; if ($('nav-dates')) $('nav-dates').hidden = false;
     const cal = MCal.mount($('pub-cal'), {
       months: 2, interactive: 'free', maxMonths: 14,
       onDay: (day, set) => {
@@ -206,7 +209,7 @@
       if (error) { $('cal-note').textContent = 'Календарь временно не загрузился — свободные даты уточняйте по телефону ' + C.phone; $('cal-note').hidden = false; return; }
       booked = MCal.toMap(data); cal.set(booked); checkDates();
     });
-  }
+  });
 
   // ---------- форма брони ----------
   if (!form) return;
